@@ -41,11 +41,12 @@ Image Processors
 
 All image processors must be subclassed from :code:`llspy.ImgProcessor`.
 All subclasses of ImgProcessor must override the :code:`process(data, meta)`
-method, which should accept a single numpy array and return a single
-processed array.  Any files placed into the plugin directory will be
-parsed for classes that implement a :code:`process` method and added
-to the list of available processors.  The signature of the :code:`__init__`
-method of the :code:`ImgProcessor` will be introspected and text fields,
+method, which should accept a numpy array and return a two-tuple containing
+the processed array and the metadata object (which may be modified).
+Any files placed into the plugin directory will be parsed for classes
+that implement a :code:`process` method and added to the list of available
+processors.  The signature of the :code:`__init__` method of the
+:code:`ImgProcessor` will be introspected and text fields,
 dropdown-menus, or checkboxes will appear in the graphical user interface
 reflecting the parameters accepted by that particular :code:`ImgProcessor`.
 (see image above as an example).  A very simple image processor might look
