@@ -33,7 +33,7 @@ disk/network, or connecting to a server.
 
 
 .. image:: img/screen.png
-    :width: 500 px
+    :width: 450
     :align: center
 
 Image Processors
