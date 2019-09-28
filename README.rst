@@ -7,7 +7,6 @@ MOSAICpy
     :target: https://cbmf.hms.harvard.edu/lattice-light-sheet/
 
 
-
 .. |copy|   unicode:: U+000A9
 
 Copyright |copy| 2019 Talley Lambert, Harvard Medical School.
@@ -34,7 +33,8 @@ disk/network, or connecting to a server.
 
 
 .. image:: img/screen.png
-
+    :width: 500 px
+    :align: center
 
 Image Processors
 ----------------
