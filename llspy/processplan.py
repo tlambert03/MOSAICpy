@@ -6,6 +6,23 @@ from llspy.libcudawrapper import RLContext
 
 
 class ProcessPlan(object):
+    """A class to store the processing plan for a given data directory and set of Imps
+
+    The ProcessPlan is responsible for accepting a data direcory, an ordered list of
+    ImgProcessors, and an optional t_range and c_range for processing.  It also creates
+    the self.meta dict, which will hold and pass metadata throughout the processing chain.
+
+    Args:
+        llsdir (LLSdir): instance of LLSdir, the data directory.
+        imps (list): A list of 3 or 4-tuples, where each item contains:
+            1. (ImgProcessor) The image processor class (uninstantiated)
+            2. (dict) - The params dict that will be passed to ImgProcessor on instantiation
+            3. (bool) - Whether the ImgProcessor is active or not
+            4. (bool, optional) - Whether the ImgProcessor is collapsed in the GUI
+        t_range (list): a list of timepoints to process.  Defaults to all timepoints
+        c_range (list): a list of channels to process.  Defaults to all channels
+    """
+
     def __init__(self, llsdir, imps=[], t_range=None, c_range=None):
         if not isinstance(llsdir, LLSdir):
             raise ValueError("First argument to ProcessPlan must be an LLSdir")
@@ -13,6 +30,8 @@ class ProcessPlan(object):
             "imps argument must be a " "list or tuple"
         )
         for imp in imps:
+            if not len(imp) >= 3:
+                raise ValueError('all items in "imps" must have a length of >= 3')
             if not issubclass(imp[0], ImgProcessor):
                 raise ValueError('imp item "{}" is not an ImgProcessor'.format(imp))
         self.llsdir = llsdir
@@ -20,6 +39,7 @@ class ProcessPlan(object):
         self.t_range = t_range or list(range(llsdir.params.nt))
         self.c_range = c_range or list(range(llsdir.params.nc))
         self.aborted = False
+        self.meta = None
 
     @property
     def ready(self):
@@ -42,6 +62,19 @@ class ProcessPlan(object):
             raise self.PlanWarning("\n".join(warnings))
 
     def plan(self, skip_warnings=False):
+        """This actually instantiates the ImgProcessors (but does not run them).
+
+        Unless explicitly skipped, it runs check_sanity() to look for potential
+        problems in the plan.  Then in instantiates all active image processors,
+        by calling the ImgProcessor.from_llsdir() class method.
+
+        It also creates the self.meta object that will be passed through the processing
+        chain.
+
+        Raises:
+            self.PlanWarning: if check_sanity() fails
+            self.PlanError: if ImgProcessor instantiation fails
+        """
         if not skip_warnings:
             self.check_sanity()
 
