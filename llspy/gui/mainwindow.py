@@ -61,7 +61,7 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
         self.listbox.eta_update.connect(self.set_eta)
         self.processSplitter.insertWidget(0, self.listbox)
         self.impListWidget.setParent(None)
-        self.impContainer = implist.ImpListContainer()
+        self.impContainer = implist.ImpListContainer(parent=self)
         self.impListWidget = self.impContainer.list
         self.processSplitter.addWidget(self.impContainer)
         self.timer = QtCore.QTimer()
@@ -128,6 +128,7 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
         self.previewCRangeLineEdit.setValidator(ctrangeValidator)
         self.previewTRangeLineEdit.setValidator(ctrangeValidator)
 
+        self.preview_threads = None
         self.previewAborted = False
         self.previewButton.clicked.connect(self.onPreview)
         if not preview._SPIMAGINE_IMPORTED:
@@ -238,16 +239,16 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
     @QtCore.pyqtSlot(str, str, str, str)
     def show_error_window(self, errMsg, title=None, info=None, detail=None):
         self.msgBox = QtWidgets.QMessageBox()
-        if title is None or title is "":
+        if title is None or title == "":
             title = "LLSpy Error"
         self.msgBox.setWindowTitle(title)
 
         # self.msgBox.setTextFormat(QtCore.Qt.RichText)
         self.msgBox.setIcon(QtWidgets.QMessageBox.Warning)
         self.msgBox.setText(errMsg)
-        if info is not None and info is not "":
+        if info is not None and info != "":
             self.msgBox.setInformativeText(info + "\n")
-        if detail is not None and detail is not "":
+        if detail is not None and detail != "":
             self.msgBox.setDetailedText(detail)
         self.msgBox.exec_()
 

@@ -2,18 +2,20 @@ import sys
 import os
 import logging
 import inspect
-import pickle
-from click import get_app_dir
-from llspy import __appname__, ImgProcessor, ImgWriter, imgprocessors
-from llspy.gui.helpers import camel_case_split, val_to_widget
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
-SETTINGS = QtCore.QSettings()
+import importlib
+import json
+from enum import Enum
+from . import IMP_DIR, PLAN_DIR, SETTINGS
+
+from llspy import ImgProcessor, ImgWriter, imgprocessors
+from llspy.gui.helpers import camel_case_split, val_to_widget, get_main_window
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 logger = logging.getLogger(__name__)
 framepath = os.path.join(os.path.dirname(__file__), "frame.ui")
 Ui_ImpFrame = uic.loadUiType(framepath)[0]
-IMP_DIR = os.path.join(get_app_dir(__appname__), "plugins")
+
 if os.path.exists(IMP_DIR):
     if IMP_DIR not in sys.path:
         sys.path.insert(0, IMP_DIR)
@@ -70,6 +72,40 @@ someone names a file the same as a builtin
 #             pass
 
 
+def get_module_obj(module, obj):
+    if module in sys.modules:
+        mod = sys.modules.get(module)
+    else:
+        mod = importlib.import_module(module)
+    if obj in mod.__dict__:
+        return mod.__dict__[obj]
+
+
+def deserializeImpList(impjson):
+    if "imps" not in impjson:
+        raise ValueError('Invalid plan file: no "imps" key')
+
+    items = []
+    errors = []
+    for imp in impjson["imps"]:
+        impclass = get_module_obj(imp["module"], imp["name"])
+        if not impclass:
+            errors.append(
+                f"ImgProcessor: {imp['module']}.{imp['name']} was specified in the plan "
+                + "but could not be imported and will be omitted."
+            )
+            continue
+        sigparams = inspect.signature(impclass).parameters
+
+        params = imp["params"]
+        for key, value in params.items():
+            d = sigparams.get(key).default
+            if isinstance(d, Enum):
+                params[key] = d.__class__(value)
+        items.append((impclass, params, imp["active"], imp["collapsed"]))
+    return items, errors
+
+
 def imp_settings_key(imp, key):
     return "imps/{}/{}".format(imp.__name__, key)
 
@@ -90,16 +126,19 @@ class ImpFrame(QtWidgets.QFrame, Ui_ImpFrame):
         initial=None,
         active=True,
         *args,
-        **kwargs
+        **kwargs,
     ):
         super(ImpFrame, self).__init__(*args, **kwargs)
         self.setupUi(self)
+
         self.imp = imp
-        self.listWidgetItem = parent
+        self.parameters = {}  # to store widget state
         self.is_collapsed = collapsed
+
+        self.listWidgetItem = parent
         if not active:
             self.activeBox.setChecked(False)
-        self.parameters = {}  # to store widget state
+
         self.content.setVisible(not self.is_collapsed)
         self.title.setText(imp.name())
         self.mouseDoubleClickEvent = self.toggleCollapsed
@@ -270,9 +309,8 @@ class ImpListWidget(QtWidgets.QListWidget):
     """
 
     planChanged = QtCore.pyqtSignal()
-    PLAN_DIR = os.path.join(get_app_dir(__appname__), "process_plans")
-    LAST_PLAN = os.path.join(PLAN_DIR, "_lastused.plan")
-    DEFAULT = os.path.join(os.path.dirname(__file__), "default.plan")
+    LAST_PLAN = os.path.join(PLAN_DIR, "_lastused.json")
+    DEFAULT = os.path.join(os.path.dirname(__file__), "default.json")
 
     def __init__(self, imps=[], *args, **kwargs):
         super(ImpListWidget, self).__init__(*args, **kwargs)
@@ -306,7 +344,30 @@ class ImpListWidget(QtWidgets.QListWidget):
         self.setMinimumWidth(self.sizeHintForColumn(0))
         self.planChanged.emit()
 
+    def serializeImpList(self):
+        out = []
+        for i, p, a, c in self.getImpList():
+            params = {k: (v.name if isinstance(v, Enum) else v) for k, v in p.items()}
+            out.append(
+                {
+                    "module": str(i.__module__),
+                    "name": str(i.__name__),
+                    "params": params,
+                    "active": a,
+                    "collapsed": c,
+                }
+            )
+        return out
+
     def getImpList(self):
+        """Returns a list of all ImgProcessors & params in the ImpList.
+
+        For each ImpFrame in the list, this will return a 4-tuple including:
+            - (class) The ImgProcessor class itself
+            - (dict) parameters with the currently entered parameters for that ImgProc.
+            - (bool) whether the processor is currently active
+            - (bool) whether the processor is currently collapsed
+        """
         items = []
         for index in range(self.count()):
             frame = self.itemWidget(self.item(index))
@@ -326,32 +387,47 @@ class ImpListWidget(QtWidgets.QListWidget):
             self.addImp(imp, initial=params, active=active, collapsed=collapsed)
 
     def savePlan(self, path=None):
-        if not os.path.exists(self.PLAN_DIR):
-            os.mkdir(self.PLAN_DIR)
+        if not os.path.exists(PLAN_DIR):
+            os.mkdir(PLAN_DIR)
         if not path:
             path = QtWidgets.QFileDialog.getSaveFileName(
-                self, "Save Plan", self.PLAN_DIR, "Plan Files (*.plan)"
+                self, "Save Plan", PLAN_DIR, "Plan Files (*.json)"
             )[0]
         if path is None or path == "":
             return
-        with open(path, "wb") as fout:
-            pickle.dump(self.getImpList(), fout, pickle.HIGHEST_PROTOCOL)
+        with open(path, "w") as fout:
+            json.dump({"imps": self.serializeImpList()}, fout)
+            # pickle.dump(self.getImpList(), fout, pickle.HIGHEST_PROTOCOL)
 
     def loadPlan(self, path=None):
         if not path:
             path = QtWidgets.QFileDialog.getOpenFileName(
-                self, "Choose Plan", self.PLAN_DIR, "Plan Files (*.plan)"
+                self, "Choose Plan", PLAN_DIR, "Plan Files (*.json)"
             )[0]
         if path is None or path == "":
             return
         else:
             try:
-                with open(path, "rb") as infile:
-                    plan = pickle.load(infile)
-            except Exception:
+                with open(path, "r") as infile:
+                    plan = json.load(infile)
+                    implist, errors = deserializeImpList(plan)
+                    self.setImpList(implist)
+                    if errors:
+                        main_win = get_main_window()
+                        main_win.show_error_window(
+                            "Errors occured while loading plan:".format(path),
+                            title="Plan Load Error",
+                            info=str("\n\n".join(errors)),
+                        )
+            except Exception as e:
+                raise
                 plan = None
-        if plan:
-            self.setImpList(plan)
+                main_win = get_main_window()
+                main_win.show_error_window(
+                    "Failed to load plan {}".format(path),
+                    title="Plan Load Error",
+                    info=str(e),
+                )
 
     def dropEvent(self, *args):
         super(ImpListWidget, self).dropEvent(*args)
@@ -374,7 +450,7 @@ class ImpListContainer(QtWidgets.QWidget):
     def __init__(self, *args, **kwargs):
         super(ImpListContainer, self).__init__(*args, **kwargs)
         self.setLayout(QtWidgets.QVBoxLayout())
-        self.list = ImpListWidget()
+        self.list = ImpListWidget(parent=self)
         self.addProcessorButton = QtWidgets.QPushButton("Add Processor")
         self.addProcessorButton.clicked.connect(self.selectImgProcessor)
         self.savePlanButton = QtWidgets.QPushButton("Save Plan")
@@ -471,6 +547,8 @@ class ImgProcessSelector(QtWidgets.QDialog):
             pass
 
     def accept(self, *args):
+        # when the OK button is clicked
+        # pass all selected ImgProcessor Classes to the ImpListWidget.
         for item in self.lstwdg.selectedItems():
             self.selected.emit(self.D[item.text()])
         return super(ImgProcessSelector, self).accept()

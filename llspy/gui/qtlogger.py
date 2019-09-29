@@ -1,14 +1,8 @@
-from click import get_app_dir
+from . import LOG_PATH
 from logging.handlers import RotatingFileHandler
 import logging
-import os
 import traceback
 from PyQt5.QtCore import QObject, pyqtSignal
-
-appdir = get_app_dir("LLSpy")
-if not os.path.isdir(appdir):
-    os.mkdir(appdir)
-LOGPATH = os.path.join(appdir, "llspygui.log")
 
 
 class NoExceptionTracebackFormatter(logging.Formatter):
@@ -48,7 +42,7 @@ class NotificationHandler(QObject, logging.Handler):
 
 class LogFileHandler(RotatingFileHandler):
     def __init__(self, **kwargs):
-        super(LogFileHandler, self).__init__(LOGPATH, **kwargs)
+        super(LogFileHandler, self).__init__(LOG_PATH, **kwargs)
         self.setLevel(logging.DEBUG)
         self.formatter = logging.Formatter(
             "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

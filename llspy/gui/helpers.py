@@ -1,12 +1,21 @@
-import time
-import os
-import sys
-import re
 import logging
+import os
+import re
+import sys
+import time
 from enum import Enum
+
 from PyQt5 import QtCore, QtWidgets
 
 logger = logging.getLogger(__name__)
+
+
+def get_main_window():
+    app = QtWidgets.QApplication.instance()
+    if app:
+        for widget in app.topLevelWidgets():
+            if isinstance(widget, QtWidgets.QMainWindow):
+                return widget
 
 
 # TODO: add timer?

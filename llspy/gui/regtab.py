@@ -9,7 +9,7 @@ from llspy.gui.helpers import newWorkerThread
 from llspy.gui import workers, actions
 from llspy.gui.img_dialog import ImgDialog
 from fiducialreg.fiducialreg import RegistrationError
-
+from . import REG_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class RegistrationTab(actions.LLSpyActions):
             "",
             QtWidgets.QFileDialog.ShowDirsOnly,
         )
-        if path is None or path is "":
+        if path is None or path == "":
             return
         RD = llsdir.RegDir(path)
         if not RD.isValid:
@@ -82,7 +82,7 @@ class RegistrationTab(actions.LLSpyActions):
             "",
             QtWidgets.QFileDialog.ShowDirsOnly,
         )
-        if outdir is None or outdir is "":
+        if outdir is None or outdir == "":
             return
 
         class RegThread(QtCore.QThread):
@@ -116,17 +116,9 @@ class RegistrationTab(actions.LLSpyActions):
                     raise err.RegistrationError("Fiducial registration failed:", str(e))
 
                 # also write to appdir ... may use it later
-                # TODO: consider making app_dir a global APP attribute,
-                # like gpulist
-                from click import get_app_dir
-
-                appdir = get_app_dir("LLSpy")
-                if not os.path.isdir(appdir):
-                    os.mkdir(appdir)
-                regdir = os.path.join(appdir, "regfiles")
-                if not os.path.isdir(regdir):
-                    os.mkdir(regdir)
-                outfile2 = os.path.join(regdir, os.path.basename(outfile))
+                if not os.path.isdir(REG_DIR):
+                    os.mkdir(REG_DIR)
+                outfile2 = os.path.join(REG_DIR, os.path.basename(outfile))
                 with open(outfile2, "w") as file:
                     file.write(outstring)
 
@@ -163,7 +155,7 @@ class RegistrationTab(actions.LLSpyActions):
                 "Text Files (*.reg *.txt *.json)",
             )[0]
 
-            if file is None or file is "":
+            if file is None or file == "":
                 return
         try:
             with open(file) as json_data:

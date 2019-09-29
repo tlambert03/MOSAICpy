@@ -87,6 +87,12 @@ class BitDepth(Enum):
     uint16 = "16-bit"
     float32 = "32-bit"
 
+    def _missing_(value):
+        if '16' in str(value):
+            return BitDepth.uint16
+        if '32' in str(value):
+            return BitDepth.float32
+
 
 class ImgProcessor(ABC):
     """ Image Processor abstract class.
@@ -212,7 +218,7 @@ class FlashProcessor(ImgProcessor):
             self.cam_params = param_file.get_subroi(data_roi)
         except Exception as e:
             raise self.ImgProcessorError("Error creating cam_params: {}".format(e))
-        self.target = perform_on
+        self.target = self.Target(perform_on)
         if self.target == self.Target.GPU:
             if not data_shape:
                 raise self.ImgProcessorError(
@@ -309,7 +315,8 @@ class DivisionProcessor(ImgProcessor):
             raise self.ImgProcessorError("Divisor Image must have 2 or 3 dimensions")
         # convert all images to 2D with provided projector func
         if divisor_path.ndim == 3:
-            divisor = self.projectors[projection.name](divisor_path)
+            projection_name = self.Projector(projection).name
+            divisor = self.projectors[projection_name.name](divisor_path)
         self.divisor = (divisor - offset).astype(np.float32)
         # preserve intensity in original image
         self.divisor /= self.divisor.mean()
@@ -415,6 +422,7 @@ class CUDADeconProcessor(ImgProcessor):
         self.shift = shift
         self.save_deskewed = save_deskewed
         self.rescale = False
+        bit_depth = BitDepth(bit_depth)
         if bit_depth in (BitDepth.uint16, "16"):
             self.dtype = np.uint16
         elif bit_depth in (BitDepth.float32, "32"):
