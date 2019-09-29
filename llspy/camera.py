@@ -25,8 +25,9 @@ def calc_correction(stack, a, b, offset):
                     d = stack[i, j, k] - offset[j, k]
                     res[i, j, k] = d if d > 0 else 0
                 else:
-                    cor = (1 - math.exp(-b[j, k] * (stack[i - 1, j, k] -
-                                        offset[j, k]))) * a[j, k]
+                    cor = (
+                        1 - math.exp(-b[j, k] * (stack[i - 1, j, k] - offset[j, k]))
+                    ) * a[j, k]
                     d = stack[i, j, k] - offset[j, k] - 0.88 * cor
                     res[i, j, k] = d if d > 0 else 0
     return res
@@ -63,22 +64,30 @@ def selectiveMedianFilter(stack, background, median_range=3, with_mean=False):
             meanMatrix = meanDistances > meanThreshold
 
             pixelMatrix = deviationMatrix | meanMatrix
-            pixelCorrection = [deviationDistances, deviationThreshold,
-                               meanDistances, meanThreshold]
+            pixelCorrection = [
+                deviationDistances,
+                deviationThreshold,
+                meanDistances,
+                meanThreshold,
+            ]
         else:
             pixelMatrix = deviationMatrix
             pixelCorrection = [deviationDistances, deviationThreshold]
 
-        pixpercent = 100 * np.sum(
-            pixelMatrix.flatten()) / float(len(pixelMatrix.flatten()))
-        logger.info('Bad pixels detected: {} ({:0.2f}%)'.format(
-            np.sum(pixelMatrix.flatten()), pixpercent))
+        pixpercent = (
+            100 * np.sum(pixelMatrix.flatten()) / float(len(pixelMatrix.flatten()))
+        )
+        logger.info(
+            "Bad pixels detected: {} ({:0.2f}%)".format(
+                np.sum(pixelMatrix.flatten()), pixpercent
+            )
+        )
 
         dt = stack.dtype
         out = np.zeros(stack.shape, dt)
         # apply pixelMatrix to correct insensitive pixels
         for z in range(stack.shape[0]):
-            frame = np.asarray(stack[z], 'Float32')
+            frame = np.asarray(stack[z], "Float32")
             filteredFrame = gpu_med_filt(frame)
             # filteredFrame = median_filter(frame, median_range)
             frame[pixelMatrix == 1] = filteredFrame[pixelMatrix == 1]
@@ -143,11 +152,11 @@ class CameraROI(np.ndarray):
 
     def __repr__(self):
         l, t, r, b = self
-        return 'CameraROI([%d, %d, %d, %d])' % (l, t, r, b)
+        return "CameraROI([%d, %d, %d, %d])" % (l, t, r, b)
 
     def __str__(self):
         l, t, r, b = self
-        return '<CameraROI left:%d, top:%d, right:%d, bot:%d>' % (l, t, r, b)
+        return "<CameraROI left:%d, top:%d, right:%d, bot:%d>" % (l, t, r, b)
 
 
 def seemsValidCamParams(path):
@@ -180,7 +189,7 @@ class CameraParameters(object):
 
     def __init__(self, path=None, data=None, roi=None):
         if data is None and path is None:
-            raise ValueError('Must provide either filename or data array')
+            raise ValueError("Must provide either filename or data array")
         if data is not None:
             self.data = data.astype(np.float32)
             self.path = path
@@ -188,35 +197,40 @@ class CameraParameters(object):
             if not os.path.isfile(path):
                 raise IOError("No such file: {}".format(path))
             self.path = path
-            roi = re.search(r'roi(\d+)-(\d+)-(\d+)-(\d+)', path)
+            roi = re.search(r"roi(\d+)-(\d+)-(\d+)-(\d+)", path)
             if roi:
                 roi = [int(r) for r in roi.groups()]
             # TODO: ignore warnings from tifffile
             self.data = imread(path).astype(np.float64)
 
         if roi is None or not len(roi):
-            raise ValueError("Could not parse CamParams ROI from from filename. "
-                             "If using a FlashParam file, please ensure that "
-                             "'roi[left]-[top]-[right]-[bottom]' is in "
-                             "the FlashParam filename.")
+            raise ValueError(
+                "Could not parse CamParams ROI from from filename. "
+                "If using a FlashParam file, please ensure that "
+                "'roi[left]-[top]-[right]-[bottom]' is in "
+                "the FlashParam filename."
+            )
         self.roi = CameraROI(roi)
         _shape = self.data.shape
         if not _shape[0] >= 3:
-            raise ValueError("Camera parameter file must have at least "
-                             "3 planes. {} has only {}"
-                             .format(path, _shape[0]))
+            raise ValueError(
+                "Camera parameter file must have at least "
+                "3 planes. {} has only {}".format(path, _shape[0])
+            )
         if not self.roi.width == _shape[1]:
-            raise ValueError("Tiff file provided does not have the same width "
-                             "({}) as the proivded roi ({})"
-                             .format(_shape[1], self.roi.width))
+            raise ValueError(
+                "Tiff file provided does not have the same width "
+                "({}) as the proivded roi ({})".format(_shape[1], self.roi.width)
+            )
         if not self.roi.height == _shape[2]:
-            raise ValueError("Tiff file provided does not have the same height "
-                             "({}) as the proivded roi ({})"
-                             .format(_shape[2], self.roi.height))
+            raise ValueError(
+                "Tiff file provided does not have the same height "
+                "({}) as the proivded roi ({})".format(_shape[2], self.roi.height)
+            )
         self.a, self.b, self.offset = self.data[:3]
 
     def __repr__(self):
-        return 'CameraParameters({})'.format(os.path.basename(self.path))
+        return "CameraParameters({})".format(os.path.basename(self.path))
 
     def get_subroi(self, subroi):
         if not isinstance(subroi, CameraROI):
@@ -224,11 +238,11 @@ class CameraParameters(object):
                 subroi = CameraROI(subroi)
             else:
                 raise ValueError(
-                    'subroi argument must be a CameraROI instance or 4-tuple')
+                    "subroi argument must be a CameraROI instance or 4-tuple"
+                )
         # make sure the Parameter ROI contains the data ROI
         if subroi not in self.roi:
-            raise ValueError(
-                'ROI for correction file does not encompass data ROI')
+            raise ValueError("ROI for correction file does not encompass data ROI")
 
         diffroi = subroi - self.roi
         # either Labview or the camera is doing
@@ -237,16 +251,24 @@ class CameraParameters(object):
         vshift = self.roi.left + self.roi.right - subroi.left - subroi.right
         # it appears that the camera never shifts the roi horizontally...
         hshift = 0
-        subP = self.data[:, diffroi[0] + vshift:diffroi[2] + vshift,
-                         diffroi[1] + hshift:diffroi[3] + hshift]
+        subP = self.data[
+            :,
+            diffroi[0] + vshift : diffroi[2] + vshift,
+            diffroi[1] + hshift : diffroi[3] + hshift,
+        ]
         return CameraParameters(data=subP, roi=subroi, path=self.path)
 
     def init_CUDAcamcor(self, shape):
         libcu.camcor_init(shape, self.data[:3])
 
-    def correct_stacks(self, stacks, medianFilter=False,
-                       trim=((0, 0), (0, 0), (0, 0)),
-                       flashCorrectTarget='cpu', dampening=0.88):
+    def correct_stacks(
+        self,
+        stacks,
+        medianFilter=False,
+        trim=((0, 0), (0, 0), (0, 0)),
+        flashCorrectTarget="cpu",
+        dampening=0.88,
+    ):
         """interleave stacks and apply correction for "sticky" Flash pixels.
 
         Expects a list of 3D np.ndarrays ordered in order of acquisition:
@@ -261,12 +283,11 @@ class CameraParameters(object):
         if isinstance(stacks, list):
             # for backwards compatibility for now
             if not len(stacks):
-                raise ValueError('Empty list of stacks received: {}'
-                                 .format(stacks))
+                raise ValueError("Empty list of stacks received: {}".format(stacks))
             if len({S.shape for S in stacks}) > 1:
-                raise ValueError('All stacks in list must have the same shape')
+                raise ValueError("All stacks in list must have the same shape")
             if not all([isinstance(S, np.ndarray) for S in stacks]):
-                raise ValueError('All stacks in list must be of type: np.ndarray')
+                raise ValueError("All stacks in list must be of type: np.ndarray")
             # interleave stacks into single 3D so that they are in the order:
             #  ch0_XYt0, ch1_XYt0, chN_XYt0, ch0_XYt1, ch1_XYt1, ...
             ny, nx = stacks[0].shape[-2:]
@@ -282,15 +303,15 @@ class CameraParameters(object):
                 # assume single channel, which doesn't need to be interleaved
                 interleaved = stacks
 
-        if flashCorrectTarget == 'cuda' or flashCorrectTarget == 'gpu':
+        if flashCorrectTarget == "cuda" or flashCorrectTarget == "gpu":
             # this must be called before! but better to do it outside of this function
             # libcu.camcor_init(interleaved.shape, self.a, self.b, self.offset)
             interleaved = libcu.camcor(interleaved)
         else:
-            if flashCorrectTarget == 'cpu':
+            if flashCorrectTarget == "cpu":
                 # JIT VERSION
                 interleaved = calc_correction(interleaved, self.a, self.b, self.offset)
-            elif flashCorrectTarget == 'numpy':
+            elif flashCorrectTarget == "numpy":
                 # NUMPY VERSION
                 interleaved = np.subtract(interleaved, self.offset)
                 correction = self.a * (1 - np.exp(-self.b * interleaved[:-1, :, :]))
@@ -298,8 +319,9 @@ class CameraParameters(object):
                 interleaved[interleaved < 0] = 0
             else:
                 raise ValueError(
-                    'unrecognized value for flashCorrectTarget '
-                    'parameter: {}'.format(flashCorrectTarget))
+                    "unrecognized value for flashCorrectTarget "
+                    "parameter: {}".format(flashCorrectTarget)
+                )
 
             # interleaved = np.subtract(interleaved, self.offset)
             # correction = self.a * (1 - np.exp(-self.b * interleaved[:-1, :, :]))
@@ -318,17 +340,18 @@ class CameraParameters(object):
             interleaved = arrayfun.trimedges(interleaved, trim, numStacks)
 
         if not np.issubdtype(interleaved.dtype, typ):
-            warnings.warn('CONVERTING')
+            warnings.warn("CONVERTING")
             interleaved = interleaved.astype(typ)
 
         deinterleaved = [s for s in np.split(interleaved, interleaved.shape[0])]
-        deinterleaved = [np.concatenate(deinterleaved[q::numStacks])
-                         for q in range(numStacks)]
+        deinterleaved = [
+            np.concatenate(deinterleaved[q::numStacks]) for q in range(numStacks)
+        ]
 
         return deinterleaved
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     from llspy import llsdir
     from llspy import samples
@@ -345,19 +368,24 @@ if __name__ == '__main__':
     corrector = camparams.get_subroi(CameraROI(E.settings.camera.roi))
 
     # this is the list you need to make
-    stacks = [imread(str(t)) for t in E.tiff.raw if 'stack0000' in str(t)]
+    stacks = [imread(str(t)) for t in E.tiff.raw if "stack0000" in str(t)]
     niters = 5
 
     import time
+
     start = time.time()
     for _ in range(niters):
-        d1 = corrector.correct_stacks(stacks, medianFilter=False, flashCorrectTarget='cpu')
+        d1 = corrector.correct_stacks(
+            stacks, medianFilter=False, flashCorrectTarget="cpu"
+        )
     end = time.time()
     print("JitCPU Time: " + str((end - start) / niters))
 
     start = time.time()
     for _ in range(niters):
-        d2 = corrector.correct_stacks(stacks, medianFilter=False, flashCorrectTarget='numpy')
+        d2 = corrector.correct_stacks(
+            stacks, medianFilter=False, flashCorrectTarget="numpy"
+        )
     end = time.time()
     print("NumpyCPU Time: " + str((end - start) / niters))
     print("Equal? = " + str(np.mean(d1[0] - d2[0])))
@@ -367,7 +395,9 @@ if __name__ == '__main__':
     start = time.time()
     corrector.init_CUDAcamcor(stacks[0].shape * np.array([len(stacks), 1, 1]))
     for _ in range(niters):
-        d3 = corrector.correct_stacks(stacks, medianFilter=False, flashCorrectTarget='cuda')
+        d3 = corrector.correct_stacks(
+            stacks, medianFilter=False, flashCorrectTarget="cuda"
+        )
     end = time.time()
     print("CUDA Time: " + str((end - start) / niters))
     print("Equal? = " + str(np.mean(d3[0] - d1[0])))

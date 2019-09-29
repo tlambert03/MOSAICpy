@@ -222,4 +222,3 @@ class ExceptionHandler(QtCore.QObject):
             "include your system configuration in any reports.  Thanks!",
             tbstring,
         )
-

@@ -2,15 +2,26 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from llspy.gui import (camcalibgui, implist, dialogs, qtlogger, folderqueue,
-                       regtab, exceptions, preview, SETTINGS, settings)
+from llspy.gui import (
+    camcalibgui,
+    implist,
+    dialogs,
+    qtlogger,
+    folderqueue,
+    regtab,
+    exceptions,
+    preview,
+    SETTINGS,
+    settings,
+)
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 # from fiducialreg.fiducialreg import RegFile, RegistrationError
 
 logger = logging.getLogger(__name__)
 
 
-def progress_gradient(start='#484DE7', finish='#787DFF'):
+def progress_gradient(start="#484DE7", finish="#787DFF"):
     a = """
     QProgressBar {
         border: 1px solid grey;
@@ -125,11 +136,13 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
             self.prevBackendSpimagineRadio.setText("spimagine [unavailable]")
 
         self.disableSpimagineCheckBox.clicked.connect(
-            lambda:
-            QtWidgets.QMessageBox.information(
-                self, 'Restart Required',
+            lambda: QtWidgets.QMessageBox.information(
+                self,
+                "Restart Required",
                 "Please quit and restart LLSpy for changes to take effect",
-                QtWidgets.QMessageBox.Ok))
+                QtWidgets.QMessageBox.Ok,
+            )
+        )
 
         # connect worker signals and slots
 
@@ -139,11 +152,11 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
         # Restore settings from previous session and show ready status
         settings.guirestore(self, SETTINGS, SETTINGS)
 
-        self.RegCalibPathLineEdit.setText('')
-        self.RegFilePath.setText('')
+        self.RegCalibPathLineEdit.setText("")
+        self.RegFilePath.setText("")
 
         self.clock.display("00:00:00")
-        self.statusBar.showMessage('Ready')
+        self.statusBar.showMessage("Ready")
 
         self.show()
         self.raise_()
@@ -182,24 +195,24 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
         self.timer.stop()
         self.clock.display("00:00:00")
         if not retcode:  # means aborted
-            self.statusBar.showMessage('Aborted')
-            self.progressBar.setStyleSheet(progress_gradient('#FF8C00', '#FFA500'))
+            self.statusBar.showMessage("Aborted")
+            self.progressBar.setStyleSheet(progress_gradient("#FF8C00", "#FFA500"))
             return
         if numfinished:
-            summary = 'Successfully Processed {} Items!'.format(numfinished)
+            summary = "Successfully Processed {} Items!".format(numfinished)
         else:
-            summary = 'Ready'
+            summary = "Ready"
         if numskipped:
-            summary += ' ({} items were skipped due to errors)'.format(numskipped)
-            self.progressBar.setStyleSheet(progress_gradient('#F22', '#F66'))
+            summary += " ({} items were skipped due to errors)".format(numskipped)
+            self.progressBar.setStyleSheet(progress_gradient("#F22", "#F66"))
         else:
-            self.progressBar.setStyleSheet(progress_gradient('#0B0', '#4B4'))
+            self.progressBar.setStyleSheet(progress_gradient("#0B0", "#4B4"))
         self.statusBar.showMessage(summary)
 
     def disableProcessButton(self):
         # turn Process button into a Cancel button and udpate menu items
         self.processButton.clicked.disconnect()
-        self.processButton.setText('CANCEL')
+        self.processButton.setText("CANCEL")
         self.processButton.clicked.connect(self.sendAbort)
         self.processButton.setEnabled(True)
         self.actionRun.setDisabled(True)
@@ -207,14 +220,14 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
 
     def sendAbort(self):
         self.listbox.abort_workers()
-        self.processButton.setText('ABORTING...')
+        self.processButton.setText("ABORTING...")
         self.processButton.setDisabled(True)
 
     def enableProcessButton(self):
         # change Process button back to "Process" and udpate menu items
         self.processButton.clicked.disconnect()
         self.processButton.clicked.connect(self.onProcess)
-        self.processButton.setText('Process')
+        self.processButton.setText("Process")
         self.processButton.setEnabled(True)
         self.actionRun.setEnabled(True)
         self.actionAbort.setDisabled(True)
@@ -225,21 +238,21 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
     @QtCore.pyqtSlot(str, str, str, str)
     def show_error_window(self, errMsg, title=None, info=None, detail=None):
         self.msgBox = QtWidgets.QMessageBox()
-        if title is None or title is '':
+        if title is None or title is "":
             title = "LLSpy Error"
         self.msgBox.setWindowTitle(title)
 
         # self.msgBox.setTextFormat(QtCore.Qt.RichText)
         self.msgBox.setIcon(QtWidgets.QMessageBox.Warning)
         self.msgBox.setText(errMsg)
-        if info is not None and info is not '':
-            self.msgBox.setInformativeText(info + '\n')
-        if detail is not None and detail is not '':
+        if info is not None and info is not "":
+            self.msgBox.setInformativeText(info + "\n")
+        if detail is not None and detail is not "":
             self.msgBox.setDetailedText(detail)
         self.msgBox.exec_()
 
     def closeEvent(self, event):
-        ''' triggered when close button is clicked on main window '''
+        """ triggered when close button is clicked on main window """
         if self.listbox.rowCount():
             if SETTINGS.value(settings.CONFIRM_ON_QUIT.key, True):
                 d = dialogs.confirm_quit_msgbox()
@@ -257,12 +270,12 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
     def quitProgram(self, save=True):
         if save:
             settings.guisave(self, SETTINGS)
-        SETTINGS.setValue('cleanExit', True)
+        SETTINGS.setValue("cleanExit", True)
         SETTINGS.sync()
         QtWidgets.QApplication.quit()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     import sys
 

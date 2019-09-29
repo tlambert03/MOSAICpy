@@ -29,7 +29,7 @@ class ProcessPlan(processplan.ProcessPlan, QtCore.QObject):
 
     def _execute_t(self, *args):
         super(ProcessPlan, self)._execute_t(*args)
-        self.t_finished.emit(self.meta['t'])
+        self.t_finished.emit(self.meta["t"])
 
     def abort(self):
         self.aborted = True
@@ -55,13 +55,15 @@ class QueueItemWorker(QtCore.QObject):
 
 
 class LLSDragDropTable(QtW.QTableWidget):
-    col_headers = ['path', 'name', 'nC', 'nT', 'nZ', 'nY', 'nX', 'angle', 'dz', 'dx']
+    col_headers = ["path", "name", "nC", "nT", "nZ", "nY", "nX", "angle", "dz", "dx"]
     n_cols = len(col_headers)
 
     status_update = QtCore.pyqtSignal(str)
     item_starting = QtCore.pyqtSignal(int)
     step_finished = QtCore.pyqtSignal(int)
-    work_finished = QtCore.pyqtSignal(int, int, int)  # return_code, numgood, numskipped,
+    work_finished = QtCore.pyqtSignal(
+        int, int, int
+    )  # return_code, numgood, numskipped,
     abort_request = QtCore.pyqtSignal()
     eta_update = QtCore.pyqtSignal(int)  # for clock
 
@@ -96,32 +98,37 @@ class LLSDragDropTable(QtW.QTableWidget):
             try:
                 val = float(self.currentItem().text())
             except ValueError:
-                self.currentItem().setText('0.0')
-                raise err.InvalidSettingsError('Value entered was not a number')
+                self.currentItem().setText("0.0")
+                raise err.InvalidSettingsError("Value entered was not a number")
             try:
                 if col == 7:
                     if not (-90 < val < 90):
-                        self.currentItem().setText('0.0')
+                        self.currentItem().setText("0.0")
                         raise err.InvalidSettingsError(
-                            'angle must be between -90 and 90')
-                    self.getLLSObjectByIndex(row).params['angle'] = val
+                            "angle must be between -90 and 90"
+                        )
+                    self.getLLSObjectByIndex(row).params["angle"] = val
                 if col == 8:
                     if not (0 < val < 20):
-                        self.currentItem().setText('0.0')
+                        self.currentItem().setText("0.0")
                         raise err.InvalidSettingsError(
-                            'dz must be between 0 and 20 (microns)')
-                    self.getLLSObjectByIndex(row).params['dz'] = val
+                            "dz must be between 0 and 20 (microns)"
+                        )
+                    self.getLLSObjectByIndex(row).params["dz"] = val
                 if col == 9:
                     if not (0 < val < 5):
-                        self.currentItem().setText('0.0')
+                        self.currentItem().setText("0.0")
                         raise err.InvalidSettingsError(
-                            'dx must be between 0 and 5 (microns)')
-                    self.getLLSObjectByIndex(row).params['dx'] = val
+                            "dx must be between 0 and 5 (microns)"
+                        )
+                    self.getLLSObjectByIndex(row).params["dx"] = val
                 # change color once updated
             finally:
-                if ((col == 7 and not (-90 < val < 90)) or
-                        (col == 8 and not (0 < val < 20)) or
-                        (col == 9 and not (0 < val < 5))):
+                if (
+                    (col == 7 and not (-90 < val < 90))
+                    or (col == 8 and not (0 < val < 20))
+                    or (col == 9 and not (0 < val < 5))
+                ):
                     self.currentItem().setForeground(QtCore.Qt.white)
                     self.currentItem().setBackground(QtCore.Qt.red)
                 else:
@@ -141,9 +148,9 @@ class LLSDragDropTable(QtW.QTableWidget):
         # FIXMEL bad reference method
         mainGUI = self.parent().parent().parent().parent().parent().parent()
         # If this folder is not on the list yet, add it to the list:
-        if not util.pathHasPattern(path, '*Settings.txt'):
+        if not util.pathHasPattern(path, "*Settings.txt"):
             if not SETTINGS.value(settings.ALLOW_NO_SETTXT.key):
-                logger.warning('No Settings.txt! Ignoring: {}'.format(path))
+                logger.warning("No Settings.txt! Ignoring: {}".format(path))
                 return
 
         # if it's already on the list, don't add it
@@ -151,7 +158,7 @@ class LLSDragDropTable(QtW.QTableWidget):
             return
 
         # if it's a folder containing files with "_Iter_"  warn the user...
-        if util.pathHasPattern(path, '*Iter_*'):
+        if util.pathHasPattern(path, "*Iter_*"):
             if SETTINGS.value(settings.WARN_ITERS.key):
 
                 d = dialogs.RenameItersMsgBox()
@@ -160,7 +167,7 @@ class LLSDragDropTable(QtW.QTableWidget):
                 if reply == d.Cancel:  # cancel hit
                     return
                 elif reply == 1:  # rename iters hit
-                    if not hasattr(self, 'renamedPaths'):
+                    if not hasattr(self, "renamedPaths"):
                         self.renamedPaths = []
                     newfolders = llsdir.rename_iters(path)
                     self.renamedPaths.append(path)
@@ -171,34 +178,39 @@ class LLSDragDropTable(QtW.QTableWidget):
                     pass
 
         E = llsdir.LLSdir(path)
-        logger.info('Adding to queue: %s' % shortname(path))
+        logger.info("Adding to queue: %s" % shortname(path))
 
         rowPosition = self.rowCount()
         self.insertRow(rowPosition)
-        item = [path,
-                shortname(str(E.path)),
-                str(E.params.nc),
-                str(E.params.nt),
-                str(E.params.nz),
-                str(E.params.ny),
-                str(E.params.nx)]
-        for frmt, key, widg in [('{:2.1f}', 'deskew', 'defaultAngleSpin'),
-                                ('{:0.3f}', 'dz', 'defaultDzSpin'),
-                                ('{:0.3f}', 'dx', 'defaultDxSpin')]:
+        item = [
+            path,
+            shortname(str(E.path)),
+            str(E.params.nc),
+            str(E.params.nt),
+            str(E.params.nz),
+            str(E.params.ny),
+            str(E.params.nx),
+        ]
+        for frmt, key, widg in [
+            ("{:2.1f}", "deskew", "defaultAngleSpin"),
+            ("{:0.3f}", "dz", "defaultDzSpin"),
+            ("{:0.3f}", "dx", "defaultDxSpin"),
+        ]:
             val = E.params.get(key)
             if not val:
                 val = getattr(mainGUI, widg).value()
-                E.params[key if key != 'deskew' else 'angle'] = val
+                E.params[key if key != "deskew" else "angle"] = val
             item.append(frmt.format(val))
         for col, elem in enumerate(item):
             entry = QtW.QTableWidgetItem(elem)
             if col < 7:
-                entry.setFlags(QtCore.Qt.ItemIsSelectable |
-                               QtCore.Qt.ItemIsEnabled)
+                entry.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
             else:
-                entry.setFlags(QtCore.Qt.ItemIsSelectable |
-                               QtCore.Qt.ItemIsEnabled |
-                               QtCore.Qt.ItemIsEditable)
+                entry.setFlags(
+                    QtCore.Qt.ItemIsSelectable
+                    | QtCore.Qt.ItemIsEnabled
+                    | QtCore.Qt.ItemIsEditable
+                )
                 if not E.settings:
                     faintRed = QtGui.QBrush(QtGui.QColor(255, 0, 0, 30))
                     lightGray = QtGui.QBrush(QtGui.QColor(160, 160, 160))
@@ -223,12 +235,12 @@ class LLSDragDropTable(QtW.QTableWidget):
         try:
             self.lls_objects.pop(path)
         except KeyError:
-            logger.warning('Could not remove path {} ... not in queue'.format(path))
+            logger.warning("Could not remove path {} ... not in queue".format(path))
             return
         items = self.findItems(path, QtCore.Qt.MatchExactly)
         for item in items:
             self.removeRow(item.row())
-        if hasattr(self, 'skipped_items'):
+        if hasattr(self, "skipped_items"):
             if path in self.skipped_items:
                 self.skipped_items.remove(path)
 
@@ -284,14 +296,16 @@ class LLSDragDropTable(QtW.QTableWidget):
 
     def keyPressEvent(self, event):
         super(LLSDragDropTable, self).keyPressEvent(event)
-        if (event.key() == QtCore.Qt.Key_Delete or
-                event.key() == QtCore.Qt.Key_Backspace):
+        if (
+            event.key() == QtCore.Qt.Key_Delete
+            or event.key() == QtCore.Qt.Key_Backspace
+        ):
             indices = self.selectionModel().selectedRows()
             i = 0
             for index in sorted(indices):
                 removerow = index.row() - i
                 path = self.getPathByIndex(removerow)
-                logger.info('Removing from queue: %s' % shortname(path))
+                logger.info("Removing from queue: %s" % shortname(path))
                 self.removePath(path)
                 i += 1
 
@@ -302,9 +316,12 @@ class LLSDragDropTable(QtW.QTableWidget):
         self.numProcessed = 0
         if self.rowCount() == 0:
             QtW.QMessageBox.warning(
-                self, "Nothing Added!",
-                'Nothing to process! Drag and drop folders into the list',
-                QtW.QMessageBox.Ok, QtW.QMessageBox.NoButton)
+                self,
+                "Nothing Added!",
+                "Nothing to process! Drag and drop folders into the list",
+                QtW.QMessageBox.Ok,
+                QtW.QMessageBox.NoButton,
+            )
             self.work_finished.emit(1, 0, 0)
             return
 
@@ -312,7 +329,7 @@ class LLSDragDropTable(QtW.QTableWidget):
         if not self.inProcess:
             self.planNextItem()
         else:
-            logger.warning('Ignoring request to process, already processing...')
+            logger.warning("Ignoring request to process, already processing...")
 
     def planNextItem(self):
         # get path from first row and create a new LLSdir object
@@ -327,7 +344,7 @@ class LLSDragDropTable(QtW.QTableWidget):
             return
 
         if not os.path.exists(self.currentPath):
-            msg = 'Skipping! path no longer exists: {}'.format(self.currentPath)
+            msg = "Skipping! path no longer exists: {}".format(self.currentPath)
             logger.info(msg)
             self.statusBar.showMessage(msg, 5000)
             skip()
@@ -351,7 +368,7 @@ class LLSDragDropTable(QtW.QTableWidget):
         except plan.PlanWarning as e:
             msg = QtW.QMessageBox()
             msg.setIcon(QtW.QMessageBox.Information)
-            msg.setText(str(e) + '\n\nContinue anyway?')
+            msg.setText(str(e) + "\n\nContinue anyway?")
             msg.setStandardButtons(QtW.QMessageBox.Ok | QtW.QMessageBox.Cancel)
             if msg.exec_() == QtW.QMessageBox.Ok:
                 plan.plan(skip_warnings=True)
@@ -365,8 +382,8 @@ class LLSDragDropTable(QtW.QTableWidget):
                 msg = QtW.QMessageBox()
                 msg.setIcon(QtW.QMessageBox.Information)
                 msg.setText(str(e))
-                _skip = msg.addButton('Skip Item', QtW.QMessageBox.YesRole)
-                msg.addButton('Cancel Process', QtW.QMessageBox.NoRole)
+                _skip = msg.addButton("Skip Item", QtW.QMessageBox.YesRole)
+                msg.addButton("Cancel Process", QtW.QMessageBox.NoRole)
                 msg.exec_()
                 if msg.clickedButton() == _skip:
                     self.on_item_error(e)
@@ -408,8 +425,9 @@ class LLSDragDropTable(QtW.QTableWidget):
 
     @QtCore.pyqtSlot(object, dict)
     def emit_update(self, imp, meta):
-        updatestring = 'Timepoint {} of {}: {}...'.format(
-            meta.get('t'), meta.get('nt'), imp.verb())
+        updatestring = "Timepoint {} of {}: {}...".format(
+            meta.get("t"), meta.get("nt"), imp.verb()
+        )
         self.status_update.emit(updatestring)
 
     @QtCore.pyqtSlot(object)
@@ -431,8 +449,13 @@ class LLSDragDropTable(QtW.QTableWidget):
         else:
             try:
                 itemTime = QtCore.QTime(0, 0).addMSecs(self.timer.elapsed()).toString()
-                logger.info(">" * 4 + " Item {} finished in {} ".format(
-                    self.currentIndex.text(), itemTime) + "<" * 4)
+                logger.info(
+                    ">" * 4
+                    + " Item {} finished in {} ".format(
+                        self.currentIndex.text(), itemTime
+                    )
+                    + "<" * 4
+                )
             except AttributeError:
                 pass
             self.removePath(self.currentPath)
@@ -459,7 +482,7 @@ class LLSDragDropTable(QtW.QTableWidget):
         self.work_finished.emit(1, self.numProcessed, len(self.skipped_items))
 
     def abort_workers(self):
-        logger.info('Message sent to abort ...')
+        logger.info("Message sent to abort ...")
         if len(self.worker_threads):
             self.aborted = True
             self.abort_request.emit()
@@ -469,5 +492,5 @@ class LLSDragDropTable(QtW.QTableWidget):
     def on_work_aborted(self):
         self.inProcess = False
         self.work_finished.emit(0, self.numProcessed, len(self.skipped_items))
-        self.setRowBackgroundColor(0, '#FFFFFF')
+        self.setRowBackgroundColor(0, "#FFFFFF")
         self.aborted = False

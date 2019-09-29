@@ -61,6 +61,7 @@ class PreviewWorker(QtCore.QObject):
 
 
 if _SPIMAGINE_IMPORTED:
+
     class SpimagineWidget(spimagine.MainWidget):
         def __init__(self, arr=None, dx=1, dz=1, *args, **kwargs):
             super(SpimagineWidget, self).__init__(*args, **kwargs)
@@ -318,4 +319,3 @@ class HasPreview(object):
         self.previewButton.clicked.connect(self.onPreview)
         self.previewAborted = False
         self.statusBar.showMessage("Ready")
-

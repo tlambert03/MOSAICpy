@@ -7,7 +7,7 @@ from llspy.gui import workers, dialogs
 from llspy.gui.helpers import reveal, shortname, newWorkerThread
 from llspy.gui.implist import IMP_DIR
 
-Ui_Main_GUI = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'main_gui.ui'))[0]
+Ui_Main_GUI = uic.loadUiType(os.path.join(os.path.dirname(__file__), "main_gui.ui"))[0]
 # form_class = uic.loadUiType('./llspy/gui/main_gui.ui')[0]  # for debugging
 
 
@@ -32,9 +32,9 @@ class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
         self.actionAbout_LLSpy.triggered.connect(self.showAboutWindow)
         self.actionHelp.triggered.connect(self.showHelpWindow)
 
-        self.openPluginsAction = self.menuFile.addAction('Open Plugins Folder')
+        self.openPluginsAction = self.menuFile.addAction("Open Plugins Folder")
         self.openPluginsAction.triggered.connect(self.showPlugins)
-        self.openPluginsAction = self.menuLLSpy.addAction('Preferences...')
+        self.openPluginsAction = self.menuLLSpy.addAction("Preferences...")
         self.openPluginsAction.triggered.connect(self.showPreferences)
 
     def showPlugins(self):
@@ -59,22 +59,25 @@ class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
                 obj.mergemips()
         else:
             path = QtW.QFileDialog.getExistingDirectory(
-                self, 'Choose Directory with MIPs to merge',
-                os.path.expanduser('~'), QtW.QFileDialog.ShowDirsOnly)
+                self,
+                "Choose Directory with MIPs to merge",
+                os.path.expanduser("~"),
+                QtW.QFileDialog.ShowDirsOnly,
+            )
             if path:
-                for axis in ['z', 'y', 'x']:
+                for axis in ["z", "y", "x"]:
                     llspy.llsdir.mergemips(path, axis, dx=0.102, delete=True)
 
     def openLLSdir(self):
         path = QtW.QFileDialog.getExistingDirectory(
-            self, 'Choose LLSdir to add to list',
-            '', QtW.QFileDialog.ShowDirsOnly)
+            self, "Choose LLSdir to add to list", "", QtW.QFileDialog.ShowDirsOnly
+        )
         if path is not None:
             self.listbox.addPath(path)
 
     @QtCore.pyqtSlot()
     def close_all_previews(self):
-        if hasattr(self, 'spimwins'):
+        if hasattr(self, "spimwins"):
             for win in self.spimwins:
                 try:
                     win.closeMe()
@@ -88,35 +91,43 @@ class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
     def reduceSelected(self):
         for item in self.listbox.selectedPaths():
             llspy.LLSdir(item).reduce_to_raw(
-                keepmip=self.saveMIPsDuringReduceCheckBox.isChecked())
+                keepmip=self.saveMIPsDuringReduceCheckBox.isChecked()
+            )
 
     def compressItem(self, item):
         def has_tiff(path):
             for f in os.listdir(path):
-                if f.endswith('.tif'):
+                if f.endswith(".tif"):
                     return True
             return False
 
         # figure out what type of folder this is
         if not has_tiff(item):
             self.statusBar.showMessage(
-                'No tiffs to compress in ' + shortname(item), 4000)
+                "No tiffs to compress in " + shortname(item), 4000
+            )
             return
 
         worker, thread = newWorkerThread(
-            workers.CompressionWorker, item, 'compress',
+            workers.CompressionWorker,
+            item,
+            "compress",
             self.compressTypeCombo.currentText(),
             workerConnect={
-                'status_update': self.statusBar.showMessage,
-                'finished': lambda: self.statusBar.showMessage('Compression finished', 4000)
+                "status_update": self.statusBar.showMessage,
+                "finished": lambda: self.statusBar.showMessage(
+                    "Compression finished", 4000
+                ),
             },
-            start=True)
+            start=True,
+        )
         self.compressionThreads.append((worker, thread))
 
     def freezeSelected(self):
         for item in self.listbox.selectedPaths():
             llspy.LLSdir(item).reduce_to_raw(
-                keepmip=self.saveMIPsDuringReduceCheckBox.isChecked())
+                keepmip=self.saveMIPsDuringReduceCheckBox.isChecked()
+            )
             self.compressItem(item)
 
     def compressSelected(self):
@@ -124,23 +135,27 @@ class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
 
     def decompressSelected(self):
         for item in self.listbox.selectedPaths():
-            if not util.find_filepattern(item, '*.tar*'):
+            if not util.find_filepattern(item, "*.tar*"):
                 self.statusBar.showMessage(
-                    'No .tar file found in ' + shortname(item), 4000)
+                    "No .tar file found in " + shortname(item), 4000
+                )
                 continue
 
             def onfinish():
                 self.listbox.llsObjects[item]._register_tiffs()
-                self.statusBar.showMessage('Decompression finished', 4000)
+                self.statusBar.showMessage("Decompression finished", 4000)
 
             worker, thread = newWorkerThread(
-                workers.CompressionWorker, item, 'decompress',
+                workers.CompressionWorker,
+                item,
+                "decompress",
                 self.compressTypeCombo.currentText(),
                 workerConnect={
-                    'status_update': self.statusBar.showMessage,
-                    'finished': onfinish
+                    "status_update": self.statusBar.showMessage,
+                    "finished": onfinish,
                 },
-                start=True)
+                start=True,
+            )
             self.compressionThreads.append((worker, thread))
 
     def concatenateSelected(self):
@@ -151,7 +166,7 @@ class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
             [self.listbox.addPath(p) for p in selectedPaths]
 
     def renameSelected(self):
-        if not hasattr(self.listbox, 'renamedPaths'):
+        if not hasattr(self.listbox, "renamedPaths"):
             self.listbox.renamedPaths = []
         for item in self.listbox.selectedPaths():
             llspy.llsdir.rename_iters(item)
@@ -161,9 +176,11 @@ class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
 
     def undoRenameSelected(self):
         box = QtW.QMessageBox()
-        box.setWindowTitle('Undo Renaming')
-        box.setText("Do you want to undo all renaming that has occured "
-                    "in this session?, or chose a directory?")
+        box.setWindowTitle("Undo Renaming")
+        box.setText(
+            "Do you want to undo all renaming that has occured "
+            "in this session?, or chose a directory?"
+        )
         box.setIcon(QtW.QMessageBox.Question)
         box.addButton(QtW.QMessageBox.Cancel)
         box.addButton("Undo Everything", QtW.QMessageBox.YesRole)
@@ -175,15 +192,20 @@ class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
             return
         elif reply == 1:  # action role  hit
             path = QtW.QFileDialog.getExistingDirectory(
-                self, 'Choose Directory to Undo',
-                os.path.expanduser('~'), QtW.QFileDialog.ShowDirsOnly)
+                self,
+                "Choose Directory to Undo",
+                os.path.expanduser("~"),
+                QtW.QFileDialog.ShowDirsOnly,
+            )
             if path:
                 paths = [path]
             else:
                 paths = []
         elif reply == 0:  # yes role  hit
-            if (not hasattr(self.listbox, 'renamedPaths')
-                    or not self.listbox.renamedPaths):
+            if (
+                not hasattr(self.listbox, "renamedPaths")
+                or not self.listbox.renamedPaths
+            ):
                 return
             paths = self.listbox.renamedPaths
 
@@ -197,17 +219,21 @@ class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
 
     def showAboutWindow(self):
         import datetime
+
         now = datetime.datetime.now()
         QtW.QMessageBox.about(
-            self, 'LLSpy',
-            'LLSpy v.{}\n'.format(llspy.__version__) +
-            'Copyright ©  {}, '.format(now.year) +
-            'President and Fellows of Harvard College.  All rights '
-            'reserved.\n\nDeveloped by Talley Lambert\n\nThe cudaDeconv '
-            'deconvolution program is owned and licensed by HHMI, Janelia '
-            'Research Campus.  Please contact innovation@janlia.hhmi.org '
-            'for access.')
+            self,
+            "LLSpy",
+            "LLSpy v.{}\n".format(llspy.__version__)
+            + "Copyright ©  {}, ".format(now.year)
+            + "President and Fellows of Harvard College.  All rights "
+            "reserved.\n\nDeveloped by Talley Lambert\n\nThe cudaDeconv "
+            "deconvolution program is owned and licensed by HHMI, Janelia "
+            "Research Campus.  Please contact innovation@janlia.hhmi.org "
+            "for access.",
+        )
 
     def showHelpWindow(self):
-        QtW.QMessageBox.about(self, 'LLSpy', 'Please see documentation at llspy.readthedocs.io')
-
+        QtW.QMessageBox.about(
+            self, "LLSpy", "Please see documentation at llspy.readthedocs.io"
+        )

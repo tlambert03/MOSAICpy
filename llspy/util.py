@@ -9,14 +9,15 @@ import ctypes
 
 
 PLAT = sys.platform
-if PLAT == 'linux2':
-    PLAT = 'linux'
-elif PLAT == 'cygwin':
-    PLAT = 'win32'
+if PLAT == "linux2":
+    PLAT = "linux"
+elif PLAT == "cygwin":
+    PLAT = "win32"
 
 
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""
+
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
@@ -60,14 +61,14 @@ def numberdict(dct):
     return o
 
 
-def pathHasPattern(path, pattern='*Settings.txt'):
+def pathHasPattern(path, pattern="*Settings.txt"):
     for file in os.listdir(path):
         if fnmatch.fnmatch(file, pattern):
             return True
     return False
 
 
-def find_filepattern(path, filepattern='*.tar*'):
+def find_filepattern(path, filepattern="*.tar*"):
     for file in os.listdir(path):
         if fnmatch.fnmatch(file, filepattern):
             return os.path.join(path, file)
@@ -84,16 +85,16 @@ def imshow(*args, **kwargs):
     return tifffile.imshow(*args, **kwargs)
 
 
-def imsave(arr, outpath, dx=1, dz=1, dt=1, unit='micron'):
+def imsave(arr, outpath, dx=1, dz=1, dt=1, unit="micron"):
     """sample wrapper for tifffile.imsave imagej=True."""
     # array must be in TZCYX order
     md = {
-        'unit': unit,
-        'spacing': dz,
-        'finterval': dt,
-        'hyperstack': 'true',
-        'mode': 'composite',
-        'loop': 'true',
+        "unit": unit,
+        "spacing": dz,
+        "finterval": dt,
+        "hyperstack": "true",
+        "mode": "composite",
+        "loop": "true",
     }
     bigT = True if arr.nbytes > 3758096384 else False  # > 3.5GB make a bigTiff
     if arr.ndim == 3:
@@ -101,8 +102,9 @@ def imsave(arr, outpath, dx=1, dz=1, dt=1, unit='micron'):
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         res = 1 / (dx or 1)
-        tifffile.imsave(outpath, arr, bigtiff=bigT, imagej=True,
-                        resolution=(res, res), metadata=md)
+        tifffile.imsave(
+            outpath, arr, bigtiff=bigT, imagej=True, resolution=(res, res), metadata=md
+        )
 
 
 def getfoldersize(folder, recurse=False):
@@ -113,13 +115,12 @@ def getfoldersize(folder, recurse=False):
                 total_size += os.path.getsize(os.path.join(dirpath, f))
         return total_size
     else:
-        return sum(os.path.getsize(os.path.join(folder, f))
-                for f in os.listdir(folder))
+        return sum(os.path.getsize(os.path.join(folder, f)) for f in os.listdir(folder))
 
 
 def format_size(size):
     """Return file size as string from byte size."""
-    for unit in ('B', 'KB', 'MB', 'GB', 'TB', 'PB'):
+    for unit in ("B", "KB", "MB", "GB", "TB", "PB"):
         if size < 1024:
             return "%.f %s" % (size, unit)
         size /= 1024.0
@@ -143,8 +144,8 @@ def which(program):
             base = sys._MEIPASS
             if is_exe(os.path.join(base, program)):
                 return os.path.join(base, program)
-            elif is_exe(os.path.join(base, 'bin', program)):
-                return os.path.join(base, 'bin', program)
+            elif is_exe(os.path.join(base, "bin", program)):
+                return os.path.join(base, "bin", program)
         except AttributeError:
             pass
 
@@ -155,7 +156,7 @@ def which(program):
                 return exe_file
 
         # binpaths = ['bin', 'Library/bin', '../../llspylibs/{}/bin'.format(PLAT)]
-        binpaths = ('bin', 'Library/bin')
+        binpaths = ("bin", "Library/bin")
         for path in binpaths:
             path = getAbsoluteResourcePath(path)
             if path:
@@ -165,7 +166,7 @@ def which(program):
                     if is_exe(exe_file):
                         return exe_file
 
-    if sys.platform.startswith('win32') and not program.endswith('.exe'):
+    if sys.platform.startswith("win32") and not program.endswith(".exe"):
         return which(program + ".exe")
     return None
 
@@ -188,8 +189,9 @@ def walklevel(some_dir, level=1):
             del dirs[:]
 
 
-def get_subfolders_containing_filepattern(dirname, filepattern='*Settings.txt',
-                                          exclude=['Corrected'], level=1):
+def get_subfolders_containing_filepattern(
+    dirname, filepattern="*Settings.txt", exclude=["Corrected"], level=1
+):
     """retrieve a list of subdirectories of the input directory that contain a
     filepattern... useful for getting raw data directories for batch processing
     """
@@ -208,10 +210,12 @@ def pyrange_to_perlregex(it, digits=4):
     return str("(" + "|".join(L) + ")")
 
 
-def reorderstack(arr, inorder='zyx', outorder='tzcyx'):
+def reorderstack(arr, inorder="zyx", outorder="tzcyx"):
     """rearrange order of array, used when resaving a file."""
     inorder = inorder.lower()
-    assert arr.ndim == len(inorder), 'The array dimensions must match the inorder dimensions'
+    assert arr.ndim == len(
+        inorder
+    ), "The array dimensions must match the inorder dimensions"
     for _ in range(len(outorder) - arr.ndim):
         arr = np.expand_dims(arr, 0)
     for i in outorder:
@@ -231,13 +235,13 @@ def getAbsoluteResourcePath(relativePath):
         # If not running as a PyInstaller created binary, try to find the data file as
         # an installed Python egg
         try:
-            basePath = os.path.dirname(sys.modules['llspy'].__file__)
+            basePath = os.path.dirname(sys.modules["llspy"].__file__)
         except Exception:
-            basePath = ''
+            basePath = ""
 
         # If the egg path does not exist, assume we're running as non-packaged
         if not os.path.exists(os.path.join(basePath, relativePath)):
-            basePath = 'llspy'
+            basePath = "llspy"
 
     path = os.path.join(basePath, relativePath)
     # If the path still doesn't exist, this function won't help you
@@ -252,18 +256,18 @@ def load_lib(libname):
     """
     # first just try to find it on the search path
 
-    searchlist = [os.path.join(os.environ.get('CONDA_PREFIX', '.'), 'Library', 'bin'),
-                  os.path.join(os.environ.get('CONDA_PREFIX', '.'), 'lib'),
-                  './lib',
-                  # '../../llspylibs/{}/lib/'.format(PLAT),
-                  # '../llspylibs/{}/lib/'.format(PLAT),
-                  '.']
+    searchlist = [
+        os.path.join(os.environ.get("CONDA_PREFIX", "."), "Library", "bin"),
+        os.path.join(os.environ.get("CONDA_PREFIX", "."), "lib"),
+        "./lib",
+        # '../../llspylibs/{}/lib/'.format(PLAT),
+        # '../llspylibs/{}/lib/'.format(PLAT),
+        ".",
+    ]
 
-    ext = {'linux': '.so',
-           'win32': '.dll',
-           'darwin': '.dylib'}
+    ext = {"linux": ".so", "win32": ".dll", "darwin": ".dylib"}
 
-    if not libname.endswith(('.so', '.dll', '.dylib')):
+    if not libname.endswith((".so", ".dll", ".dylib")):
         libname += ext[PLAT]
 
     for f in searchlist:
@@ -273,7 +277,7 @@ def load_lib(libname):
         except Exception:
             continue
 
-    #last resort, chdir into each dir
+    # last resort, chdir into each dir
     curdir = os.path.abspath(os.curdir)
     for f in searchlist:
         try:
@@ -283,7 +287,7 @@ def load_lib(libname):
                 lib = ctypes.CDLL(libname)
                 os.chdir(curdir)
                 return lib
-            raise Exception('didn\'t find it')
+            raise Exception("didn't find it")
         except Exception:
             continue
 
@@ -303,20 +307,22 @@ class paramEncoder(json.JSONEncoder):
 
 def readHDF5(filename):
     import h5py
-    f = h5py.File(filename, 'r')
-    return f['data'].value
+
+    f = h5py.File(filename, "r")
+    return f["data"].value
 
 
 def readHDF5Frame(filename, frame):
     import h5py
-    f = h5py.File(filename, 'r')
-    return f['data'][frame]
+
+    f = h5py.File(filename, "r")
+    return f["data"][frame]
 
 
 def writeHDF5(filename, data):
     import h5py
-    f = h5py.File(filename, 'w')
-    f['data'] = data
+
+    f = h5py.File(filename, "w")
+    f["data"] = data
     f.flush()
     f.close()
-

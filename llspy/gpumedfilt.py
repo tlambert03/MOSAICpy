@@ -21,7 +21,7 @@ queue = cl.CommandQueue(ctx)
 mf = cl.mem_flags
 
 # Kernel function
-src = '''
+src = """
 void sort(int *a, int *b, int *c) {
    int swap;
    if(*a > *b) {
@@ -78,7 +78,7 @@ __kernel void medianFilter(__global float *img, __global float *result, __global
         result[i] = pixel11;
     }
 }
-'''
+"""
 
 # Kernel function instantiation
 prg = cl.Program(ctx, src).build()
@@ -88,8 +88,12 @@ def gpu_med_filt(img):
     # Allocate memory for variables on the device
     img_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=img)
     result_g = cl.Buffer(ctx, mf.WRITE_ONLY, img.nbytes)
-    width_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.int32(img.shape[1]))
-    height_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.int32(img.shape[0]))
+    width_g = cl.Buffer(
+        ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.int32(img.shape[1])
+    )
+    height_g = cl.Buffer(
+        ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.int32(img.shape[0])
+    )
     # Call Kernel. Automatically takes care of block/grid distribution
     prg.medianFilter(queue, img.shape, None, img_g, result_g, width_g, height_g)
     result = np.empty_like(img)
