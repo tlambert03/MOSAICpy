@@ -25,10 +25,10 @@
 :disabled {color:rgba(0,0,0,80);}
 #impFrame { background: qlineargradient(spread:pad, x1:0 y1:1, x2:0 y2:0, stop:0 rgba(190, 190, 190), stop:1 rgba(220,220,220)) }
 QLabel { qproperty-alignment: AlignRight; }
-#closeButton{ font-size: 20pt; }
-#closeButton:hover:!pressed { 
-color: red;
-}
+#closeButton{ font-size: 20pt; padding-left: 6;  padding-right: 6; padding-bottom: 2px; }
+#helpButton{ color: #555; font-size: 14pt; padding-left: 6; padding-right: 8;}
+#closeButton:hover:!pressed {color: red;}
+#helpButton:hover:!pressed {color: red;}
 </string>
   </property>
   <property name="frameShape">
