@@ -2,8 +2,11 @@ from PyQt5 import QtWidgets, QtCore
 from llspy.gui import img_dialog, helpers, SETTINGS
 from llspy import util, processplan
 import os
+import traceback
+import sys
 import numpy as np
 import logging
+from .helpers import get_main_window
 
 logger = logging.getLogger(__name__)
 _SPIMAGINE_IMPORTED = False
@@ -106,11 +109,8 @@ if _SPIMAGINE_IMPORTED:
 class HasPreview(object):
     abort_request = QtCore.pyqtSignal()
 
-    def onPreview(self):
-        self.currentImps = self.impListWidget.getImpList()
-        self.previewButton.clicked.disconnect()
-        self.previewButton.setText("CANCEL")
-        self.previewButton.clicked.connect(self.abortPreview)
+    def getSelectedPath(self):
+        # if there is nothing in the list, just abort
         if self.listbox.rowCount() == 0:
             QtWidgets.QMessageBox.warning(
                 self,
@@ -119,14 +119,12 @@ class HasPreview(object):
                 QtWidgets.QMessageBox.Ok,
                 QtWidgets.QMessageBox.NoButton,
             )
-            self.previewButton.setEnabled(True)
-            self.previewButton.setText("Preview")
             return
 
-        # if there's only one item on the list show it
+        # if there's only one item on the list auto-select it
         if self.listbox.rowCount() == 1:
             firstRowSelected = 0
-        # otherwise, prompt the user to select one
+        # otherwise, make sure the user has selected one
         else:
             selectedRows = self.listbox.selectionModel().selectedRows()
             if not len(selectedRows):
@@ -137,56 +135,47 @@ class HasPreview(object):
                     QtWidgets.QMessageBox.Ok,
                     QtWidgets.QMessageBox.NoButton,
                 )
-                self.previewButton.setEnabled(True)
-                self.previewButton.setText("Preview")
                 return
             else:
                 # if they select multiple, chose the first one
                 firstRowSelected = selectedRows[0].row()
 
+        return self.listbox.getPathByIndex(firstRowSelected)
+
+    def onPreview(self):
+        self.previewPath = self.getSelectedPath()
+        if not self.previewPath:
+            return
+
+        # grab current list of imps and switch preview button to cancel
+        self.currentImps = self.impListWidget.getImpList()
+        self.previewButton.clicked.disconnect()
+        self.previewButton.setText("CANCEL")
+        self.previewButton.setEnabled(False)
+        self.previewButton.clicked.connect(self.abortPreview)
+
+        # get selectex C and T ranges
         procTRangetext = self.previewTRangeLineEdit.text()
         procCRangetext = self.previewCRangeLineEdit.text()
-
         if procTRangetext:
             tRange = helpers.string_to_iterable(procTRangetext)
         else:
             tRange = [0]
-
         if procCRangetext:
             cRange = helpers.string_to_iterable(procCRangetext)
-            # if (self.lastopts['correctFlash'] and
-            #         settings.sessionSettings.value('warnCameraCorPreview', True, type=bool)):
-            #     box = QtWidgets.QMessageBox()
-            #     box.setWindowTitle('Note')
-            #     box.setText(
-            #         "You have selected to preview a subset of channels, but "
-            #         "have also selected Flash camera correction.  Note that the camera "
-            #         "correction requires all channels to be enabled.  Preview will not "
-            #         "reflect accurate camera correction.")
-            #     box.setIcon(QtWidgets.QMessageBox.Warning)
-            #     box.addButton(QtWidgets.QMessageBox.Ok)
-            #     box.setDefaultButton(QtWidgets.QMessageBox.Ok)
-            #     pref = QtWidgets.QCheckBox("Don't remind me.")
-            #     box.setCheckBox(pref)
-
-            #     def dontRemind(value):
-            #         if value:
-            #             settings.sessionSettings.setValue('warnCameraCorPreview', False)
-            #         else:
-            #             settings.sessionSettings.setValue('warnCameraCorPreview', True)
-            #         settings.sessionSettings.sync()
-
-            #     pref.stateChanged.connect(dontRemind)
-            #     box.exec_()
         else:
             cRange = None  # means all channels
 
-        self.previewPath = self.listbox.getPathByIndex(firstRowSelected)
+        # Create the dataDirectory object and ProcessPlan
         llsdir = self.listbox.getLLSObjectByPath(self.previewPath)
-
+        # here is where we actually instantiate the ProcessPlan (PreviewPlan is a subclass)
         plan = PreviewPlan(llsdir, self.currentImps, t_range=tRange, c_range=cRange)
+
+        # make sure the plan is going to work first...
         try:
             plan.plan()  # do sanity check here
+        except plan.PlanError:
+            raise
         except plan.PlanWarning as e:
             msg = QtWidgets.QMessageBox()
             msg.setIcon(QtWidgets.QMessageBox.Information)
@@ -198,13 +187,24 @@ class HasPreview(object):
                 plan.plan(skip_warnings=True)
             else:
                 return
-        except plan.PlanError:
-            raise
+        except Exception:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
 
-        if not os.path.exists(self.previewPath):
-            self.statusBar.showMessage(
-                "Skipping! path no longer exists: {}".format(self.previewPath), 5000
+            main_win = get_main_window()
+            main_win.show_error_window(
+                f"Unexpected {exc_type.__name__}:\n",
+                title="Plan Load Error",
+                info=str(exc_value),
+                detail="".join(
+                    traceback.format_exception(exc_type, exc_value, exc_traceback)
+                ),
             )
+
+            self.on_item_finished()
+            return
+
+        # make sure it hasn't disappeared
+        if not os.path.exists(self.previewPath):
             self.statusBar.showMessage(
                 "Skipping! path no longer exists: {}".format(self.previewPath), 5000
             )
@@ -213,7 +213,7 @@ class HasPreview(object):
             self.previewButton.setText("Preview")
             return
 
-        # Create worker thread
+        # Create worker thread and connect signals
         worker, thread = helpers.newWorkerThread(PreviewWorker, plan)
         if self.prevBackendSpimagineRadio.isChecked() and _SPIMAGINE_IMPORTED:
             worker.finished.connect(self.showSpimagineWindow)
@@ -222,8 +222,10 @@ class HasPreview(object):
         worker.item_errored.connect(self.on_item_error)
         worker.preview_update.connect(self.update_preview)
         worker.plan.imp_starting.connect(self.emit_update)
-        self.preview_threads = (thread, worker)
         self.abort_request.connect(worker.plan.abort)
+
+        # save stuff so it doesn't get garbage collected
+        self.preview_threads = (thread, worker)
         self.preview_data = None
         thread.start()
         self.previewButton.setEnabled(True)
@@ -266,9 +268,6 @@ class HasPreview(object):
                     self.preview_data,
                     info=meta,
                     title=helpers.shortname(self.previewPath),
-                )
-                win.close_requested.connect(
-                    lambda: self.abortPreview() if win == self.spimwins[-1] else None
                 )
                 win.close_requested.connect(
                     lambda: self.spimwins.pop(self.spimwins.index(win))
@@ -314,8 +313,12 @@ class HasPreview(object):
     def on_item_finished(self):
         self.cleanup_preview_workers()
         self.preview_data = None
-        self.previewButton.setEnabled(True)
-        self.previewButton.setText("Preview")
+        try:
+            self.previewButton.clicked.disconnect()
+        except Exception:
+            pass
         self.previewButton.clicked.connect(self.onPreview)
+        self.previewButton.setText("Preview")
+        self.previewButton.setEnabled(True)
         self.previewAborted = False
         self.statusBar.showMessage("Ready")
