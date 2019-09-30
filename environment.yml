@@ -18,6 +18,7 @@ dependencies:
   
   - sphinx
   - sphinx-autobuild
+  - sphinxcontrib-napoleon
   - ipython
   - black
   - flake8
