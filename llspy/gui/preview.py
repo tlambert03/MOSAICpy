@@ -31,11 +31,14 @@ class PreviewPlan(processplan.PreviewPlan, QtCore.QObject):
         super(PreviewPlan, self).__init__(*args, **kwargs)
 
     def _iterimps(self, data):
-        for imp in self.imps:
+        for n, imp in enumerate(self.imps):
             if self.aborted:
                 break
             self.imp_starting.emit(imp, self.meta)
-            data, self.meta = imp(data, self.meta)
+            try:
+                data, self.meta = imp(data, self.meta)
+            except Exception as err:
+                raise self.ProcessError(imp, n) from err
         return data, self.meta
 
     def abort(self):
@@ -175,6 +178,7 @@ class HasPreview(object):
         try:
             plan.plan()  # do sanity check here
         except plan.PlanError:
+            self.on_item_finished()
             raise
         except plan.PlanWarning as e:
             msg = QtWidgets.QMessageBox()
@@ -237,8 +241,9 @@ class HasPreview(object):
         )
         self.statusBar.showMessage(updatestring)
 
-    def on_item_error(self):
+    def on_item_error(self, err=None):
         self.on_item_finished()
+        raise err
 
     def append_preview_data(self, newdata):
         if self.preview_data is None:

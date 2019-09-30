@@ -108,6 +108,7 @@ class ProcessPlan(object):
         }
 
     def execute(self):
+        """executes the processing plan, iterating over timepoints"""
         decons = [isinstance(i, CUDADeconProcessor) for i in self.imps]
         for t in self.t_range:
             if self.aborted:
@@ -118,6 +119,7 @@ class ProcessPlan(object):
             self._execute_t(data, decons)
 
     def _execute_t(self, data, decons):
+        # FIXME: this decon setup logic should go somewhere in the Decon ImgProcessor
         if len(self.c_range) == 1 and any(decons):
             wave = self.meta["w"][0]
             otf_dir = self.imps[decons.index(True)].otf_dir
@@ -138,8 +140,11 @@ class ProcessPlan(object):
             return self._iterimps(data)
 
     def _iterimps(self, data):
-        for imp in self.imps:
-            data, self.meta = imp(data, self.meta)
+        for n, imp in enumerate(self.imps):
+            try:
+                data, self.meta = imp(data, self.meta)
+            except Exception as err:
+                raise self.ProcessError(imp, n) from err
         cuda_reset()
         return data, self.meta
 
@@ -152,6 +157,16 @@ class ProcessPlan(object):
         """ light error, if a plan has ill-advised steps """
 
         pass
+
+    class ProcessError(Exception):
+        """ error occured during processing """
+
+        def __init__(self, imp, position=None):
+            self.msg = f"ProcessError in ImgProcessor <{imp.name()}>"
+            self.msg += f" at position {position + 1}" if position is not None else ''
+            super().__init__(self.msg)
+            self.imp = imp  # the img processor that cause the error
+            self.position = position  # the position of the Imp that cause the problem
 
 
 class PreviewPlan(ProcessPlan):

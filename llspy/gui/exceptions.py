@@ -130,16 +130,18 @@ try:
 except Exception:
     pass
 
-sentry_sdk.init(
-    "https://95509a56f3a745cea2cd1d782d547916:e0dfd1659afc4eec83169b7c9bf66e33@sentry.io/221111",
-    release=llspy.__version__,
-    in_app_include=["llspy", "spimagine", "gputools"],
-    environment=env,
-)
-with sentry_sdk.configure_scope() as scope:
-    scope.user = {"id": uuid.getnode(), "ip_address": ip}
-    for key, value in tags.items():
-        scope.set_tag(key, value)
+if SETTINGS.value(settings.ALLOW_BUGREPORT.key):
+    logger.info("Initializing Sentry Bug Logging")
+    sentry_sdk.init(
+        "https://95509a56f3a745cea2cd1d782d547916:e0dfd1659afc4eec83169b7c9bf66e33@sentry.io/221111",
+        release=llspy.__version__,
+        in_app_include=["llspy", "spimagine", "gputools"],
+        environment=env,
+    )
+    with sentry_sdk.configure_scope() as scope:
+        scope.user = {"id": uuid.getnode(), "ip_address": ip}
+        for key, value in tags.items():
+            scope.set_tag(key, value)
 
 ignore_logger("OpenGL.GL.shaders")
 ignore_logger("PIL.PngImagePlugin")
@@ -191,13 +193,19 @@ class ExceptionHandler(QtCore.QObject):
         err_info = (etype, value, tb)
         if isinstance(value, LLSpyError):
             self.handleLLSpyError(*err_info)
+        elif isinstance(value, llspy.processplan.ProcessPlan.ProcessError):
+            self.handleProcessError(*err_info)
         elif "0xe06d7363" in str(value).lower():
             self.handleCUDA_CL_Error(*err_info)
         else:  # uncaught exceptions go to sentry
             if SETTINGS.value(settings.ALLOW_BUGREPORT.key, True):
                 logger.info("Sending bug report")
-                sentry_sdk.capture_exception(err_info)
-            self.errorMessage.emit(str(value), "", "", "")
+                try:
+                    sentry_sdk.capture_exception(err_info)
+                except Exception:
+                    pass
+            detail = "".join(traceback.format_exception(*err_info))
+            self.errorMessage.emit(str(value), etype.__name__, "", detail)
             print("!" * 50)
             traceback.print_exception(*err_info)
 
@@ -222,3 +230,9 @@ class ExceptionHandler(QtCore.QObject):
             "include your system configuration in any reports.  Thanks!",
             tbstring,
         )
+
+    def handleProcessError(self, etype, value, tb):
+        cause = value.__cause__ or value
+        tbstring = "".join(traceback.format_exception(etype, cause, tb))
+        title = "ProcessError"
+        self.errorMessage.emit(value.msg, title, cause.msg, tbstring)

@@ -21,6 +21,23 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 logger = logging.getLogger(__name__)
 
 
+class ResizeableMsgBox(QtWidgets.QMessageBox):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.max_shape = (1400, 800)
+        self.setSizeGripEnabled(True)
+        self.setMouseTracking(True)
+
+    def event(self, e):
+        if e.type() == QtCore.QEvent.MouseMove:
+            self.setMaximumSize(*self.max_shape)
+            te = self.findChild(QtWidgets.QTextEdit)
+            if te:
+                te.setMaximumHeight(self.max_shape[1])
+                te.setMinimumHeight(250)
+        return super().event(e)
+
+
 def progress_gradient(start="#484DE7", finish="#787DFF"):
     a = """
     QProgressBar {
@@ -238,7 +255,8 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
 
     @QtCore.pyqtSlot(str, str, str, str)
     def show_error_window(self, errMsg, title=None, info=None, detail=None):
-        self.msgBox = QtWidgets.QMessageBox()
+        self.msgBox = ResizeableMsgBox()
+
         if title is None or title == "":
             title = "LLSpy Error"
         self.msgBox.setWindowTitle(title)

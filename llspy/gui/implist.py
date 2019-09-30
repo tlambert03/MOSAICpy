@@ -329,7 +329,10 @@ class ImpListWidget(QtWidgets.QListWidget):
             for imp in imps:
                 self.addImp(imp)
         else:
-            self.loadPlan(self.LAST_PLAN)
+            try:
+                self.loadPlan(self.LAST_PLAN)
+            except FileNotFoundError:
+                pass
         if not self.count():
             self.loadPlan(self.DEFAULT)
 

@@ -28,7 +28,9 @@ SKIP_PROCESSED = SetTup(
 SAVE_MIPS = SetTup(
     "prefs/save_mips", False, "Save any MIPs when reducing data folder to raw state"
 )
-# DISABLE_SPIMAGINE = SetTup('prefs/disable_spimagine', False, 'Disable spimagine viewer (in case of conflicts)')
+# DISABLE_SPIMAGINE = SetTup(
+#     "prefs/disable_spimagine", False, "Disable spimagine viewer (in case of conflicts)"
+# )
 CHECK_UPDATES = SetTup(
     "prefs/check_updates", True, "Check anaconda cloud for updates on startup"
 )
@@ -51,7 +53,8 @@ def guisave(widget, qsettings):
     qsettings.setValue(selfName + "_size", widget.size())
     qsettings.setValue(selfName + "_pos", widget.pos())
     for name, obj in inspect.getmembers(widget):
-        # if type(obj) is QComboBox:  # this works similar to isinstance, but missed some field... not sure why?
+        # if type(obj) is QComboBox:  # this works similar to isinstance, 
+        # but missed some field... not sure why?
         get, _, _ = getter_setter_onchange(obj)
         value = get() if get else None
         if value is not None:

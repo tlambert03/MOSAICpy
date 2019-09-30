@@ -41,9 +41,6 @@ def test():
 
 
 def main():
-    # freeze multiprocessing support for pyinstaller
-    # multiprocessing.freeze_support()
-
     # create the APP instance
     APP = QtWidgets.QApplication(sys.argv)
     appicon = QtGui.QIcon(util.getAbsoluteResourcePath("gui/logo_dark.png"))
