@@ -16,65 +16,63 @@ logger = logging.getLogger(__name__)
 framepath = os.path.join(os.path.dirname(__file__), "frame.ui")
 Ui_ImpFrame = uic.loadUiType(framepath)[0]
 
-if os.path.exists(IMP_DIR):
-    if IMP_DIR not in sys.path:
-        sys.path.insert(0, IMP_DIR)
-    for fname in os.listdir(IMP_DIR):
-        if fname.endswith(".py"):
-            try:
-                __import__(os.path.splitext(fname)[0])
-            except Exception as e:
-                logger.error(
-                    'Could not load plugin "{}" due to {}: {}'.format(
-                        fname, type(e).__name__, str(e)
-                    )
-                )
-"""
-This is the better way to import plugins, but currently i can't pickle
-objects that are imported this way... so instead, I add plugins path to
-sys.path.  That has the downside of potential namespace conflicts if
-someone names a file the same as a builtin
-"""
-# try:
-#     import importlib.util
-
-#     def import_plugin(fullpath, namespace='plugins'):
-#         fname = os.path.splitext(os.path.basename(fullpath))[0]
-#         mod_name = namespace + '.' + fname
-#         spec = importlib.util.spec_from_file_location(mod_name, fullpath)
-#         foo = importlib.util.module_from_spec(spec)
-#         spec.loader.exec_module(foo)
-#         sys.modules[mod_name] = foo
-#         sys.path.append(mod_name)
-#         return foo
-
-# except ImportError:
-#     import imp
-
-#     def import_plugin(fullpath, namespace='plugins'):
-#         fname = os.path.splitext(os.path.basename(fullpath))[0]
-#         mod_name = namespace + '.' + fname
-#         foo = imp.load_source(mod_name, fullpath)
-#         sys.modules[mod_name] = foo
-#         return foo
+# if os.path.exists(IMP_DIR):
+#     if IMP_DIR not in sys.path:
+#         sys.path.insert(0, IMP_DIR)
+#     for fname in os.listdir(IMP_DIR):
+#         if fname.endswith(".py"):
+#             try:
+#                 __import__(os.path.splitext(fname)[0])
+#             except Exception as e:
+#                 logger.error(
+#                     'Could not load plugin "{}" due to {}: {}'.format(
+#                         fname, type(e).__name__, str(e)
+#                     )
+#                 )
+# """
+# This is the better way to import plugins, but currently i can't pickle
+# objects that are imported this way... so instead, I add plugins path to
+# sys.path.  That has the downside of potential namespace conflicts if
+# someone names a file the same as a builtin
+# """
 
 
-# def import_plugins(folder, namespace='plugins'):
-#     if not os.path.exists(folder):
-#         return
-#     if folder not in sys.path:
-#         sys.path.append(folder)
-#     for fname in os.listdir(folder):
-#         fullpath = os.path.join(folder, fname)
-#         try:
-#             yield import_plugin(fullpath)
-#         except AttributeError:
-#             pass
+PLUGIN_NAMESPACE = "__mosaic_plugins__"
+
+
+def import_plugin(fullpath, namespace=PLUGIN_NAMESPACE):
+    fname = os.path.splitext(os.path.basename(fullpath))[0]
+    mod_name = namespace + "." + fname
+    spec = importlib.util.spec_from_file_location(mod_name, fullpath)
+    foo = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(foo)
+    sys.modules[mod_name] = foo
+    sys.path.append(mod_name)
+    return foo
+
+
+def import_plugins(folder=IMP_DIR):
+    if not os.path.exists(folder):
+        return
+    if folder not in sys.path:
+        sys.path.append(folder)
+    for fname in os.listdir(folder):
+        if not fname.endswith(".py"):
+            continue
+        fullpath = os.path.join(folder, fname)
+        try:
+            yield import_plugin(fullpath)
+        except AttributeError:
+            pass
 
 
 def get_module_obj(module, obj):
     if module in sys.modules:
         mod = sys.modules.get(module)
+    elif module.startswith(PLUGIN_NAMESPACE):
+        basename = module.lstrip(PLUGIN_NAMESPACE).lstrip(".")
+        fullpath = os.path.join(IMP_DIR, basename + ".py")
+        mod = import_plugin(fullpath)
     else:
         mod = importlib.import_module(module)
     if obj in mod.__dict__:
@@ -95,6 +93,23 @@ def deserializeImpList(impjson):
                 + "but could not be imported and will be omitted."
             )
             continue
+
+        if not issubclass(impclass, ImgProcessor):
+            errors.append(
+                f"ImgProcessor: {imp['module']}.{imp['name']} was specified in the plan "
+                + "but does not appear to be a subclass of mosaicpy.ImgProcessor and will "
+                + "be omitted."
+            )
+            continue
+
+        if inspect.isabstract(impclass):
+            errors.append(
+                f"ImgProcessor: {imp['module']}.{imp['name']} was specified in the plan "
+                + "but it is an abstract class and will be omitted. "
+                + "Did you implement the process method?"
+            )
+            continue
+
         sigparams = inspect.signature(impclass).parameters
 
         params = imp["params"]
@@ -446,16 +461,6 @@ class ImpListWidget(QtWidgets.QListWidget):
         super(ImpListWidget, self).dropEvent(*args)
         self.savePlan(self.LAST_PLAN)
 
-    # def startDrag(self, supportedActions):
-    #     # drag_item = self.currentItem()
-    #     # drag = QtGui.QDrag(self)
-    #     # dragMimeData = QtCore.QMimeData()
-    #     # drag.setMimeData(dragMimeData)
-    #     # drag.setPixmap(self.itemWidget(drag_item).grab())
-    #     # drag.setHotSpot(self._mouse_pos)
-    #     # drag.exec_()
-    #     super(ImpListWidget, self).startDrag(supportedActions)
-
 
 class ImpListContainer(QtWidgets.QWidget):
     """ Just a container for the listWidget and the buttons """
@@ -517,40 +522,45 @@ class ImgProcessSelector(QtWidgets.QDialog):
         self._search_module(imgprocessors)
 
         # check plugins dir
-        # for module in import_plugins(self.IMP_DIR):
-        if os.path.exists(IMP_DIR):
-            if IMP_DIR not in sys.path:
-                sys.path.insert(0, IMP_DIR)
-            for fname in os.listdir(IMP_DIR):
-                if fname.endswith(".py"):
-                    module = __import__(os.path.splitext(fname)[0])
-                    self._search_module(module)
+        for module in import_plugins():
+            self._search_module(module)
+
+        # if os.path.exists(IMP_DIR):
+        #     if IMP_DIR not in sys.path:
+        #         sys.path.insert(0, IMP_DIR)
+        #     for fname in os.listdir(IMP_DIR):
+        #         if fname.endswith(".py"):
+        #             module = __import__(os.path.splitext(fname)[0])
+        #             self._search_module(module)
 
         lay.addWidget(self.lstwdg)
         lay.addWidget(self.buttonBox)
 
-    def _search_module(self, module, _raise=False):
+    def _search_module(self, module, _raise=True):
         for name, obj in inspect.getmembers(module):
             try:
                 self._try_import_imgp(obj)
             except self.PluginImportError as e:
                 if _raise:
                     if obj not in (ImgProcessor, ImgWriter):
-                        print(e)
                         logger.warning(e)
+                        print(e)
                         self.import_error.emit(str(e), "", "", "")
 
     def _try_import_imgp(self, obj):
         try:
-            if issubclass(obj, ImgProcessor):
+            if issubclass(obj, ImgProcessor) and ImgProcessor in obj.__bases__:
                 if inspect.isabstract(obj):
                     raise self.PluginImportError(
-                        'Detected an ImgProcessor plugin named "{}", '.format(
-                            obj.__name__
-                        )
-                        + 'but could not import. Did you implement the "process" '
-                        "method?"
+                        f'Detected an ImgProcessor plugin named "{obj.__name__}"'
+                        + "but it was still an abstract class. "
+                        + 'Did you implement the "process" method?'
                     )
+                # the process function should accept (self, data, meta)
+                # procparams = inspect.signature(obj.process).parameters
+                # if not len(procparams) == 3:
+                #     # warn
+
                 name = obj.name()  # look for verbose name
                 self.D[camel_case_split(name)] = obj
                 itemN = QtWidgets.QListWidgetItem(camel_case_split(name))
