@@ -1119,11 +1119,11 @@ QProgressBar::chunk:horizontal {
     <addaction name="actionRename_Iters"/>
     <addaction name="actionUndo_Rename_Iters"/>
    </widget>
-   <widget class="QMenu" name="menuLLSpy">
+   <widget class="QMenu" name="menuMOSAICpy">
     <property name="title">
-     <string>LLSpy</string>
+     <string>MOSAICpy</string>
     </property>
-    <addaction name="actionAbout_LLSpy"/>
+    <addaction name="actionAbout_MOSAICpy"/>
     <addaction name="actionHelp"/>
    </widget>
    <widget class="QMenu" name="menuTools">
@@ -1137,7 +1137,7 @@ QProgressBar::chunk:horizontal {
    <addaction name="menuView"/>
    <addaction name="menuProcess"/>
    <addaction name="menuTools"/>
-   <addaction name="menuLLSpy"/>
+   <addaction name="menuMOSAICpy"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <property name="enabled">
@@ -1274,9 +1274,9 @@ and restore folder to it's original state
     <string>Ctrl+Shift+W</string>
    </property>
   </action>
-  <action name="actionAbout_LLSpy">
+  <action name="actionAbout_MOSAICpy">
    <property name="text">
-    <string>About LLSpy</string>
+    <string>About MOSAICpy</string>
    </property>
   </action>
   <action name="actionFreeze">

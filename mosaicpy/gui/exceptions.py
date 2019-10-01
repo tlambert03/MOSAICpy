@@ -6,14 +6,14 @@ import sentry_sdk
 from sentry_sdk.integrations.logging import ignore_logger
 
 import traceback
-import llspy
+import mosaicpy
 import sys
 import platform
 import re
 import os
 import uuid
 import logging
-from llspy.gui import settings, SETTINGS
+from mosaicpy.gui import settings, SETTINGS
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +97,7 @@ elif "CONDA_PREFIX" in os.environ:
 
 try:
     tags["revision"] = fetch_git_sha(
-        os.path.dirname(os.path.dirname(sys.modules["llspy"].__file__))
+        os.path.dirname(os.path.dirname(sys.modules["mosaicpy"].__file__))
     )[:12]
 except Exception:
     pass
@@ -116,7 +116,7 @@ else:
 #     logger.error("CUDAbinException: Could not get gpulist")
 
 tags["pyqt"] = QtCore.QT_VERSION_STR
-for p in ("numpy", "pyopencl", "pyopengl", "spimagine", "gputools", "llspy"):
+for p in ("numpy", "pyopencl", "pyopengl", "spimagine", "gputools", "mosaicpy"):
     try:
         tags[p] = fetch_package_version(p)
     except Exception:
@@ -134,8 +134,8 @@ if SETTINGS.value(settings.ALLOW_BUGREPORT.key):
     logger.info("Initializing Sentry Bug Logging")
     sentry_sdk.init(
         "https://95509a56f3a745cea2cd1d782d547916:e0dfd1659afc4eec83169b7c9bf66e33@sentry.io/221111",
-        release=llspy.__version__,
-        in_app_include=["llspy", "spimagine", "gputools"],
+        release=mosaicpy.__version__,
+        in_app_include=["mosaicpy", "spimagine", "gputools"],
         environment=env,
     )
     with sentry_sdk.configure_scope() as scope:
@@ -151,30 +151,30 @@ def camel2spaces(string):
     return re.sub(r"((?<=[a-z])[A-Z]|(?<!\A)[A-R,T-Z](?=[a-z]))", r" \1", string)
 
 
-class LLSpyError(Exception):
+class MOSAICpyError(Exception):
     """Base class for exceptions in this module."""
 
     def __init__(self, msg=None, detail=""):
         if msg is None:
-            msg = "An unexpected error occured in LLSpy"
-        super(LLSpyError, self).__init__(msg)
+            msg = "An unexpected error occured in MOSAICpy"
+        super(MOSAICpyError, self).__init__(msg)
         self.msg = msg
         self.detail = detail
 
 
-class InvalidSettingsError(LLSpyError):
+class InvalidSettingsError(MOSAICpyError):
     """Exception raised when something is not set correctly in the GUI."""
 
     pass
 
 
-class MissingBinaryError(LLSpyError):
+class MissingBinaryError(MOSAICpyError):
     """Unable to find executable or shared library dependency."""
 
     pass
 
 
-class RegistrationError(LLSpyError):
+class RegistrationError(MOSAICpyError):
     """Unable to find executable or shared library dependency."""
 
     pass
@@ -191,9 +191,9 @@ class ExceptionHandler(QtCore.QObject):
 
     def handler(self, etype, value, tb):
         err_info = (etype, value, tb)
-        if isinstance(value, LLSpyError):
-            self.handleLLSpyError(*err_info)
-        elif isinstance(value, llspy.processplan.ProcessPlan.ProcessError):
+        if isinstance(value, MOSAICpyError):
+            self.handleMOSAICpyError(*err_info)
+        elif isinstance(value, mosaicpy.processplan.ProcessPlan.ProcessError):
             self.handleProcessError(*err_info)
         elif "0xe06d7363" in str(value).lower():
             self.handleCUDA_CL_Error(*err_info)
@@ -209,7 +209,7 @@ class ExceptionHandler(QtCore.QObject):
             print("!" * 50)
             traceback.print_exception(*err_info)
 
-    def handleLLSpyError(self, etype, value, tb):
+    def handleMOSAICpyError(self, etype, value, tb):
         tbstring = "".join(traceback.format_exception(etype, value, tb))
         title = camel2spaces(etype.__name__).strip(" Error")
         self.errorMessage.emit(value.msg, title, value.detail, tbstring)
@@ -225,8 +225,8 @@ class ExceptionHandler(QtCore.QObject):
             "CUDA/OpenCL clash",
             "If you continue to get this error, please "
             'click the "disable Spimagine" checkbox in the config tab '
-            "and restart LLSpy.  To report this bug or get updates on a fix, "
-            "please go to https://github.com/tlambert03/LLSpy/issues/2 and "
+            "and restart MOSAICpy.  To report this bug or get updates on a fix, "
+            "please go to https://github.com/tlambert03/MOSAICpy/issues/2 and "
             "include your system configuration in any reports.  Thanks!",
             tbstring,
         )

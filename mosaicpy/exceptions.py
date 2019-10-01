@@ -1,14 +1,14 @@
-class LLSpyError(Exception):
+class MOSAICpyError(Exception):
     """
     Generic exception indicating anything relating to the execution
-    of LLSpy. A string containing an error message should be supplied
+    of MOSAICpy. A string containing an error message should be supplied
     when raising this exception.
     """
 
     pass
 
 
-class ParametersError(LLSpyError):
+class ParametersError(MOSAICpyError):
     """
     Exception indicating something is wrong with the parameters for preview
     or processing. A string containing an error message should be supplied
@@ -18,7 +18,7 @@ class ParametersError(LLSpyError):
     pass
 
 
-class CompressionError(LLSpyError):
+class CompressionError(MOSAICpyError):
     """
     Exception indicating something went wrong with compression or decompression
     of an LLSdir.
@@ -27,7 +27,7 @@ class CompressionError(LLSpyError):
     pass
 
 
-class CUDAbinException(LLSpyError):
+class CUDAbinException(MOSAICpyError):
     """
     Generic exception indicating anything relating to the execution
     of cudaDeconDeskew. A string containing an error message should be supplied
@@ -54,7 +54,7 @@ class CUDAProcessError(CUDAbinException):
         self.message = "cudaDeconv returned a non-zero exit code"
 
 
-class LibCUDAException(LLSpyError):
+class LibCUDAException(MOSAICpyError):
     """
     Error indicating something wrong with libcudaDeconv.
     """
@@ -62,9 +62,9 @@ class LibCUDAException(LLSpyError):
     pass
 
 
-class SettingsError(LLSpyError):
+class SettingsError(MOSAICpyError):
     pass
 
 
-class OTFError(LLSpyError):
+class OTFError(MOSAICpyError):
     pass

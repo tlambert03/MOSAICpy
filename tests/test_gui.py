@@ -1,8 +1,8 @@
 import os
-from llspy.gui.mainwindow import main_GUI
+from mosaicpy.gui.mainwindow import main_GUI
 from PyQt5 import QtWidgets, QtCore
 from pytestqt import qtbot
-from llspy.llsdir import LLSdir
+from mosaicpy.llsdir import LLSdir
 
 
 def test_basic_processing(qtbot):

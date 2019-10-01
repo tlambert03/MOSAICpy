@@ -1059,7 +1059,7 @@ class CloudSet(object):
 
     def show_tformed_image(self, movingLabel=None, fixedLabel=None, **kwargs):
         try:
-            from llspy.libcudawrapper import affineGPU
+            from mosaicpy.libcudawrapper import affineGPU
         except ImportError:
             print("Could not import affineGPU, can't show tformed image")
             return
@@ -1136,7 +1136,7 @@ class RegFile(object):
         else:
             self.tforms = regdict["tforms"]
 
-        # these parameters are written to the regfile by llspy
+        # these parameters are written to the regfile by mosaicpy
         try:
             from datetime import datetime
 

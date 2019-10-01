@@ -1,7 +1,7 @@
 from PyQt5 import QtWidgets, QtCore
 from functools import partial
-from llspy.gui import SETTINGS, helpers, settings
-from llspy import __version__
+from mosaicpy.gui import SETTINGS, helpers, settings
+from mosaicpy import __version__
 
 
 class ClickableLabel(QtWidgets.QLabel):
@@ -16,7 +16,7 @@ class PreferencesWindow(QtWidgets.QDialog):
         super(PreferencesWindow, self).__init__()
         self.setLayout(QtWidgets.QGridLayout())
 
-        title = QtWidgets.QLabel("LLSpy Preferences")
+        title = QtWidgets.QLabel("MOSAICpy Preferences")
         title.setStyleSheet("font-weight: bold; font-size: 20px;")
         self.layout().addWidget(title, 0, 0, 1, 2)
         for i, settup in enumerate(settings.SETTUPS.values()):
@@ -115,7 +115,7 @@ class NewVersionDialog(DontConfirmMsgBox):
             "Don't check for new updates",
             "New Version Available",
             "Update available: v%s\n\nYou are using v%s".format(newversion, __version__)
-            + 'You may update by typing "conda update -c talley llspy" '
+            + 'You may update by typing "conda update -c talley mosaicpy" '
             "at the anaconda prompt.",
             QtWidgets.QMessageBox.OK,
             QtWidgets.QMessageBox.OK,

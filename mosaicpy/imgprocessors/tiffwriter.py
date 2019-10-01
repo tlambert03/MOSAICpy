@@ -1,6 +1,6 @@
 from . import ImgWriter
 import os
-from llspy.util import imsave
+from mosaicpy.util import imsave
 
 try:
     from pathlib import Path

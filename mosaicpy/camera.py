@@ -39,7 +39,7 @@ def selectiveMedianFilter(stack, background, median_range=3, with_mean=False):
     HHMI/Janelia Research Campus, 2011-2014
 
     """
-    from llspy.gpumedfilt import gpu_med_filt
+    from mosaicpy.gpumedfilt import gpu_med_filt
 
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -353,8 +353,8 @@ class CameraParameters(object):
 
 if __name__ == "__main__":
 
-    from llspy import llsdir
-    from llspy import samples
+    from mosaicpy import llsdir
+    from mosaicpy import samples
 
     paramfile = samples.camparams  # path to the calibration file
 

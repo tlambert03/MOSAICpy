@@ -4,25 +4,25 @@
 The :code:`ImgProcessor` Class
 ==============================
 
-The :class:`ImgProcessor <llspy.imgprocessors.imgprocessors.ImgProcessor>` is
+The :class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>` is
 the key class that controls the flow of image processing in MOSAICpy. Each
 processor accepts a numpy array (the data) along with the metadata object, does
 *something* with the data and/or metadata, then passes them both on to the next
 processor.  MOSAICpy takes care of converting all
-:class:`ImgProcessor <llspy.imgprocessors.imgprocessors.ImgProcessor>` s into a
+:class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>` s into a
 graphical interface in the MOSAICpy GUI, by introspecting the :func:`__init__`
 signature for parameter names, types, and default values.
 
-All :class:`ImgProcessor <llspy.imgprocessors.imgprocessors.ImgProcessor>`
+All :class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>`
 subclasses should override the :func:`process` method.
 
 A very simple
-:class:`ImgProcessor <llspy.imgprocessors.imgprocessors.ImgProcessor>`
+:class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>`
 might look something like this.
 
 .. code:: python
 
-    from llspy import ImgProcessor
+    from mosaicpy import ImgProcessor
 
     class Plugin(ImgProcessor):
         """ This Processor simply prints the shape of the
@@ -32,7 +32,7 @@ might look something like this.
             print(f"The shape of this data is {data.shape}")
             return data, meta
 
-:class:`ImgProcessor <llspy.imgprocessors.imgprocessors.ImgProcessor>`
+:class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>`
 **options:**
 
 - **verbose_name** - Provide a :code:`verbose_name` class attribute to change
@@ -59,7 +59,7 @@ might look something like this.
   :code:`verbose_help`
 
 As an example, here is an
-:class:`ImgProcessor <llspy.imgprocessors.imgprocessors.ImgProcessor>`
+:class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>`
 as rendered in the GUI, and the corresponding python class
 
 .. image:: ../img/medianfilter.png
@@ -129,23 +129,23 @@ How :code:`ImgProcessors` are registered in the GUI
 ---------------------------------------------------
 
 - The main :class:`ImpListContainer` instance creates an instance of
-  :class:`ImpListWidget <llspy.gui.implist.ImpListWidget>`
-- The :class:`ImpListWidget <llspy.gui.implist.ImpListWidget>`
+  :class:`ImpListWidget <mosaicpy.gui.implist.ImpListWidget>`
+- The :class:`ImpListWidget <mosaicpy.gui.implist.ImpListWidget>`
   maintains a list of active
-  :class:`ImgProcessor <llspy.imgprocessors.imgprocessors.ImgProcessor>` s.
+  :class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>` s.
 - For each active
-  :class:`ImgProcessor <llspy.imgprocessors.imgprocessors.ImgProcessor>`, an
-  :class:`ImpFrame <llspy.gui.implist.ImpFrame>` is instantiated.
-- The :class:`ImpFrame <llspy.gui.implist.ImpFrame>` class builds a
+  :class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>`, an
+  :class:`ImpFrame <mosaicpy.gui.implist.ImpFrame>` is instantiated.
+- The :class:`ImpFrame <mosaicpy.gui.implist.ImpFrame>` class builds a
   simple GUI from the
-  :class:`ImgProcessor <llspy.imgprocessors.imgprocessors.ImgProcessor>`
+  :class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>`
   :func:`__init__` method signature.
 
 ImgProcessors may be added to the list by clicking the "Add Processor" button.
-This opens an :class:`ImgProcessSelector <llspy.gui.implistImgProcessSelector>`
+This opens an :class:`ImgProcessSelector <mosaicpy.gui.implistImgProcessSelector>`
 window which imports all files in the plugins folder whose filename
 ends in :code:`.py`.  It then inspects the module for subclasses of
-:class:`ImgProcessor <llspy.imgprocessors.imgprocessors.ImgProcessor>`.  *Only
+:class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>`.  *Only
 subclasses that declare a* :func:`process` *method will be imported.*  The user
 can then select one or more processors to be added to the main window.
 
@@ -153,12 +153,12 @@ can then select one or more processors to be added to the main window.
 .. image:: ../img/implist.png
 
 
-.. automodule:: llspy.gui.implist
+.. automodule:: mosaicpy.gui.implist
     :members: ImgProcessSelector, ImpListWidget, ImpFrame
 
 
 Built in :code:`ImgProcessors`
 ------------------------------
 
-.. automodule:: llspy.imgprocessors.imgprocessors
+.. automodule:: mosaicpy.imgprocessors.imgprocessors
     :members: ImgProcessor, ImgWriter

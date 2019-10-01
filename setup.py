@@ -4,7 +4,7 @@ from codecs import open
 from os import path
 import sys
 
-with open('llspy/version.py') as f:
+with open('mosaicpy/version.py') as f:
     exec(f.read())
 
 INCLUDELIBS = False
@@ -52,13 +52,13 @@ if INCLUDELIBS:
 
 
 setup(
-    name='llspy',
+    name='mosaicpy',
     version=__version__,
-    description='Lattice Light Sheet Processing Tools',
+    description='Modular image processing tool in python',
     long_description=README,
     author='Talley Lambert',
     author_email='talley.lambert@gmail.com',
-    url='https://github.com/tlambert03/LLSpy2',
+    url='https://github.com/tlambert03/MOSAICpy',
     license='BSD 3-clause',
     packages=find_packages(exclude=('tests', 'docs', 'pyinstaller')),
     classifiers=[
@@ -81,7 +81,7 @@ setup(
     ],
     python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*',
     package_data={
-        'llspy': PACKAGE_DATA,
+        'mosaicpy': PACKAGE_DATA,
     },
     data_files=DATA_FILES,
     install_requires=[
@@ -100,8 +100,8 @@ setup(
     ],
     entry_points={
             'console_scripts': [
-                'lls = llspy.bin.llspy_cli:cli',
-                'lls-gui = llspy.bin.llspy_gui:main'
+                'mosaic = mosaicpy.bin.cli:cli',
+                'mosaic-gui = mosaicpy.bin.gui:main'
             ],
     },
 )

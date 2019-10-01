@@ -1,5 +1,5 @@
 # Only need to change these two variables
-PKG_NAME=llspy
+PKG_NAME=mosaicpy
 USER=talley
 
 OS=$TRAVIS_OS_NAME-64

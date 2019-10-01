@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from llspy.gui import (
+from mosaicpy.gui import (
     camcalibgui,
     implist,
     dialogs,
@@ -60,7 +60,7 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
 
     def __init__(self, *args):
         super(main_GUI, self).__init__(*args)
-        self.setWindowTitle("LLSpy :: Lattice Light Sheet Processing")
+        self.setWindowTitle("MOSAICpy :: Modular image processing tool")
         self.LLSItemThreads = []
         self.compressionThreads = []
         self.argQueue = []  # holds all argument lists that will be sent to threads
@@ -116,7 +116,7 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
         #     app = QtCore.QCoreApplication.instance()
         #     if not hasattr(app, 'gpuset'):
         #         app.gpuset = set()
-        #     gpulist = llspy.cudabinwrapper.gpulist()
+        #     gpulist = mosaicpy.cudabinwrapper.gpulist()
         #     if len(gpulist):
         #         for i, gpu in enumerate(gpulist):
         #             box = QtWidgets.QCheckBox(self.tab_config)
@@ -131,7 +131,7 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
         #         label.setText('No CUDA-capabled GPUs detected')
         #         self.gpuGroupBoxLayout.addWidget(label)
 
-        # except llspy.cudabinwrapper.CUDAbinException as e:
+        # except mosaicpy.cudabinwrapper.CUDAbinException as e:
         #     logger.warn(e)
         #     pass
 
@@ -157,7 +157,7 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
             lambda: QtWidgets.QMessageBox.information(
                 self,
                 "Restart Required",
-                "Please quit and restart LLSpy for changes to take effect",
+                "Please quit and restart MOSAICpy for changes to take effect",
                 QtWidgets.QMessageBox.Ok,
             )
         )
@@ -258,7 +258,7 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
         self.msgBox = ResizeableMsgBox()
 
         if title is None or title == "":
-            title = "LLSpy Error"
+            title = "MOSAICpy Error"
         self.msgBox.setWindowTitle(title)
 
         # self.msgBox.setTextFormat(QtCore.Qt.RichText)

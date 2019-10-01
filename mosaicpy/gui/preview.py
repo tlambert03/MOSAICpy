@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, QtCore
-from llspy.gui import img_dialog, helpers, SETTINGS
-from llspy import util, processplan
+from mosaicpy.gui import img_dialog, helpers, SETTINGS
+from mosaicpy import util, processplan
 import os
 import traceback
 import sys

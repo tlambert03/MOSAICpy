@@ -484,8 +484,8 @@ if __name__ == "__main__":
             RL_cleanup()
         elif sys.argv[1] == "camcor":
 
-            from llspy import llsdir
-            from llspy import samples
+            from mosaicpy import llsdir
+            from mosaicpy import samples
             import time
 
             E = llsdir.LLSdir(samples.stickypix)

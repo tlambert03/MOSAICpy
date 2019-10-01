@@ -1,4 +1,4 @@
-{% set name = "llspy" %}
+{% set name = "mosaicpy" %}
 {% set setupdata = load_setup_py_data() %}
 
 package:
@@ -11,7 +11,7 @@ package:
 
 source:
   path: ..
-  # git_url: https://github.com/tlambert03/LLSpy
+  # git_url: https://github.com/tlambert03/MOSAICpy
   # git_rev: "{{ environ.get('BRANCH') }}"
 
 build:
@@ -59,7 +59,7 @@ test:
     - pytest-qt
     - llscd
   imports:
-    - llspy # [not py2k]
+    - mosaicpy # [not py2k]
   commands:
     # - which lls  # [unix]
     # - where lls  # [win]
@@ -77,4 +77,4 @@ about:
 # app:
 #   entry: lls-gui
 #   icon: ../_assets/llspy_logo.png
-#   summary:  "LLSpy GUI"
+#   summary:  "MOSAICpy GUI"

@@ -3,7 +3,7 @@ import logging
 import os
 import numpy as np
 from enum import Enum
-from llspy.libcudawrapper import (
+from mosaicpy.libcudawrapper import (
     RL_interface,
     camcor,
     camcor_init,
@@ -11,11 +11,16 @@ from llspy.libcudawrapper import (
     deskewGPU,
     rotateGPU,
 )
-from llspy.camera import CameraParameters, calc_correction, selectiveMedianFilter
-from llspy.arrayfun import interleave, deinterleave, sub_background, detect_background
-from llspy.util import imread
-from llspy import LLSdir
-from llspy.otf import choose_otf
+from mosaicpy.camera import CameraParameters, calc_correction, selectiveMedianFilter
+from mosaicpy.arrayfun import (
+    interleave,
+    deinterleave,
+    sub_background,
+    detect_background,
+)
+from mosaicpy.util import imread
+from mosaicpy import LLSdir
+from mosaicpy.otf import choose_otf
 
 logger = logging.getLogger()
 
@@ -565,7 +570,7 @@ class RotateYProcessor(AffineProcessor):
 #         self.RegProcessPathLineEdit.setText('')
 #         return
 #     try:
-#         RO = llspy.llsdir.get_regObj(path)
+#         RO = mosaicpy.llsdir.get_regObj(path)
 #     except json.decoder.JSONDecodeError as e:
 #         self.RegProcessPathLineEdit.setText('')
 #         raise exceptions.RegistrationError("Failed to parse registration file", str(e))
@@ -581,7 +586,7 @@ class RotateYProcessor(AffineProcessor):
 #                  'cpd_affine', 'cpd_rigid', 'cpd_similarity', 'cpd_2step']
 #     # RegDirs allow all modes, RegFiles only allow modes that were calculated
 #     # at the time of file creation
-#     if isinstance(RO, llspy.RegDir):
+#     if isinstance(RO, mosaicpy.RegDir):
 #         modes = [m.title().replace('Cpd', 'CPD') for m in modeorder]
 #     elif isinstance(RO, RegFile):
 #         modes = [m.lower() for m in RO.modes]

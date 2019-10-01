@@ -2,7 +2,7 @@ import unittest
 import sys
 sys.path.append('..')
 
-from llspy import parse
+from mosaicpy import parse
 
 
 class FilenameTests(unittest.TestCase):

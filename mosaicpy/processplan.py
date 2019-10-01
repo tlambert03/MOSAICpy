@@ -1,8 +1,8 @@
-from llspy.llsdir import LLSdir
-from llspy.imgprocessors import ImgProcessor, ImgWriter, CUDADeconProcessor
-from llspy.libcudawrapper import cuda_reset
-from llspy.otf import choose_otf
-from llspy.libcudawrapper import RLContext
+from mosaicpy.llsdir import LLSdir
+from mosaicpy.imgprocessors import ImgProcessor, ImgWriter, CUDADeconProcessor
+from mosaicpy.libcudawrapper import cuda_reset
+from mosaicpy.otf import choose_otf
+from mosaicpy.libcudawrapper import RLContext
 
 
 class ProcessPlan(object):
@@ -48,7 +48,9 @@ class ProcessPlan(object):
     def check_sanity(self):
         # sanity checkes go here...
         warnings = []
-        writers = [issubclass(imp, ImgWriter) for imp, p, act, _ in self.imp_classes if act]
+        writers = [
+            issubclass(imp, ImgWriter) for imp, p, act, _ in self.imp_classes if act
+        ]
         if not any(writers):
             warnings.append("No Image writer/output detected.")
         try:
@@ -90,6 +92,7 @@ class ProcessPlan(object):
                 errors.append("%s:  " % imp.name() + str(e))
             except Exception as e:
                 import traceback
+
                 traceback.print_exc()
                 errors.append("%s:  " % imp.name() + str(e))
 
@@ -167,7 +170,7 @@ class ProcessPlan(object):
 
         def __init__(self, imp, position=None):
             self.msg = f"ProcessError in ImgProcessor <{imp.name()}>"
-            self.msg += f" at position {position + 1}" if position is not None else ''
+            self.msg += f" at position {position + 1}" if position is not None else ""
             super().__init__(self.msg)
             self.imp = imp  # the img processor that cause the error
             self.position = position  # the position of the Imp that cause the problem

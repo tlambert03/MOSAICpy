@@ -6,16 +6,16 @@ import logging
 # import multiprocessing
 
 try:
-    import llspy
+    import mosaicpy
 except ImportError:
     import os
 
     this_dir = os.path.dirname(os.path.abspath(__file__))
     sys.path.append(os.path.join(this_dir, os.pardir, os.pardir))
-    import llspy
+    import mosaicpy
 
-from llspy.gui import dialogs, settings, SETTINGS, mainwindow, qtlogger, exceptions
-from llspy import util, __version__
+from mosaicpy.gui import dialogs, settings, SETTINGS, mainwindow, qtlogger, exceptions
+from mosaicpy import util, __version__
 from PyQt5 import QtWidgets, QtGui
 from distutils.version import StrictVersion
 
@@ -25,7 +25,7 @@ logger.setLevel(logging.DEBUG)
 lhStdout = logger.handlers[0]  # grab console handler so we can delete later
 ch = logging.StreamHandler()  # create new console handler
 ch.setLevel(logging.ERROR)  # with desired logging level
-# ch.addFilter(logging.Filter('llspy'))  # and any filters
+# ch.addFilter(logging.Filter('mosaicpy'))  # and any filters
 logger.addHandler(ch)  # add it to the root logger
 logger.removeHandler(lhStdout)  # and delete the original streamhandler
 
@@ -50,14 +50,14 @@ def main():
     if sys.platform.startswith("win32"):
         import ctypes
 
-        myappid = "llspy.LLSpy." + __version__
+        myappid = "mosaicpy.MOSAICpy." + __version__
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
     # set up the logfile
     fh = qtlogger.LogFileHandler(maxBytes=100000, backupCount=2)
     logger.addHandler(fh)
     fh.setLevel(logging.DEBUG)
-    logger.info(">" * 10 + "  LLSpy STARTUP  " + "<" * 10)
+    logger.info(">" * 10 + "  MOSAICpy STARTUP  " + "<" * 10)
 
     # instantiate the main window widget
     mainGUI = mainwindow.main_GUI()
@@ -84,13 +84,13 @@ def main():
     # request permission to send error reports
     if not SETTINGS.value("error_permission_requested", False):
         box = QtWidgets.QMessageBox()
-        box.setWindowTitle("Help improve LLSpy")
+        box.setWindowTitle("Help improve MOSAICpy")
         box.setText(
-            "Thanks for using LLSpy.\n\nIn order to improve the "
-            "stability of LLSpy, we'd like to send automatic "
+            "Thanks for using MOSAICpy.\n\nIn order to improve the "
+            "stability of MOSAICpy, we'd like to send automatic "
             "error and crash logs.\n\nNo personal "
             "information is included and the full error-reporting "
-            "code can be viewed in llspy.gui.exceptions. "
+            "code can be viewed in mosaicpy.gui.exceptions. "
             "Thanks for your help!\n"
         )
         box.setIcon(QtWidgets.QMessageBox.Question)
@@ -110,11 +110,11 @@ def main():
     if SETTINGS.value("cleanExit", False) and SETTINGS.value(
         settings.ALLOW_BUGREPORT.key, True
     ):
-        logger.warning("LLSpy failed to exit cleanly on the previous session")
+        logger.warning("MOSAICpy failed to exit cleanly on the previous session")
         try:
             with open(qtlogger.LOGPATH, "r") as f:
                 crashlog = f.read()
-                exceptions.client.captureMessage("LLSpyGUI Bad Exit\n\n" + crashlog)
+                exceptions.client.captureMessage("MOSAICpyGUI Bad Exit\n\n" + crashlog)
         except Exception:
             pass
 
@@ -124,7 +124,7 @@ def main():
             from binstar_client import Binstar
 
             client = Binstar()
-            llsinfo = client.package("talley", "llspy")
+            llsinfo = client.package("talley", "mosaicpy")
             newestVersion = llsinfo["latest_version"]
             if StrictVersion(newestVersion) > StrictVersion(__version__):
                 dialogs.NewVersionDialog(newestVersion).exec_()
@@ -133,11 +133,11 @@ def main():
 
     # check to see if the cudaDeconv binary is valid, and alert if not
     try:
-        from llspy import cudabinwrapper
+        from mosaicpy import cudabinwrapper
 
         binary = cudabinwrapper.get_bundled_binary()
         logger.info(cudabinwrapper.CUDAbin(binary).list_gpus())
-        # if not llspy.nGPU() > 0:
+        # if not mosaicpy.nGPU() > 0:
         #     QtWidgets.QMessageBox.warning(mainGUI, "No GPUs detected!",
         #         "cudaDeconv found no "
         #         "CUDA-capable GPUs.\n\n Preview/Processing will likely not work.",
@@ -151,7 +151,7 @@ def main():
         #     'The cudaDeconv.exe program is owned by HHMI Janelia Research Campus, '
         #     'and access to that program can be arranged via a license agreement with them. '
         #     'Please contact innovation@janelia.hhmi.org.\n\n'
-        #     'More info in the documentation at llspy.readthedocs.io',
+        #     'More info in the documentation at mosaicpy.readthedocs.io',
         #     QtWidgets.QMessageBox.Ok, QtWidgets.QMessageBox.NoButton)
 
     SETTINGS.setValue("cleanExit", False)

@@ -2,19 +2,19 @@ import numpy as np
 import logging
 import json
 import os
-import llspy.gui.exceptions as err
+import mosaicpy.gui.exceptions as err
 from PyQt5 import QtCore, QtWidgets
-from llspy import llsdir
-from llspy.gui.helpers import newWorkerThread
-from llspy.gui import workers, actions
-from llspy.gui.img_dialog import ImgDialog
+from mosaicpy import llsdir
+from mosaicpy.gui.helpers import newWorkerThread
+from mosaicpy.gui import workers, actions
+from mosaicpy.gui.img_dialog import ImgDialog
 from fiducialreg.fiducialreg import RegistrationError
 from . import REG_DIR
 
 logger = logging.getLogger(__name__)
 
 
-class RegistrationTab(actions.LLSpyActions):
+class RegistrationTab(actions.MOSAICpyActions):
     def __init__(self, *args, **kwargs):
         super(RegistrationTab, self).__init__(*args, **kwargs)
         self.RegCalibPathLoadButton.clicked.connect(self.setRegCalibPath)

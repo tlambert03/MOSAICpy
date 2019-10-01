@@ -8,8 +8,8 @@ import json
 from enum import Enum
 from . import IMP_DIR, PLAN_DIR, SETTINGS
 
-from llspy import ImgProcessor, ImgWriter, imgprocessors
-from llspy.gui.helpers import camel_case_split, val_to_widget, get_main_window
+from mosaicpy import ImgProcessor, ImgWriter, imgprocessors
+from mosaicpy.gui.helpers import camel_case_split, val_to_widget, get_main_window
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 logger = logging.getLogger(__name__)
@@ -489,7 +489,7 @@ class ImpListContainer(QtWidgets.QWidget):
 class ImgProcessSelector(QtWidgets.QDialog):
     """ Popup dialog to select new widgets to add to the list
 
-    will search llspy.imgprocessors by default, will add plugins later
+    will search mosaicpy.imgprocessors by default, will add plugins later
     """
 
     selected = QtCore.pyqtSignal(object)

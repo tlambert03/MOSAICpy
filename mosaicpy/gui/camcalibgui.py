@@ -1,14 +1,14 @@
 from PyQt5 import QtCore, QtGui
 from PyQt5 import QtWidgets as QtW
-from llspy import camcalib
-from llspy.util import getAbsoluteResourcePath, pathHasPattern
+from mosaicpy import camcalib
+from mosaicpy.util import getAbsoluteResourcePath, pathHasPattern
 import numpy as np
 import os
 import sys
 import glob
 import tifffile as tf
-from llspy.gui.camcordialog import Ui_Dialog as camcorDialog
-from llspy.gui.helpers import newWorkerThread
+from mosaicpy.gui.camcordialog import Ui_Dialog as camcorDialog
+from mosaicpy.gui.helpers import newWorkerThread
 
 thisDirectory = os.path.dirname(os.path.abspath(__file__))
 

@@ -3,8 +3,8 @@ MOSAICpy
 ########
 
 
-.. image:: https://raw.githubusercontent.com/tlambert03/LLSpy/develop/img/cbmflogo.png
-    :target: https://cbmf.hms.harvard.edu/lattice-light-sheet/
+.. image:: img/cbmflogo.png
+    :target: https://cbmf.hms.harvard.edu/
 
 
 .. |copy|   unicode:: U+000A9
@@ -39,7 +39,7 @@ disk/network, or connecting to a server.
 Image Processors
 ----------------
 
-All image processors must be subclassed from :code:`llspy.ImgProcessor`.
+All image processors must be subclassed from :code:`mosaicpy.ImgProcessor`.
 All subclasses of ImgProcessor must override the :code:`process(data, meta)`
 method, which should accept a numpy array and return a two-tuple containing
 the processed array and the metadata object (which may be modified).
@@ -54,7 +54,7 @@ like this:
 
 .. code:: python
 
-    from llspy import ImgProcessor
+    from mosaicpy import ImgProcessor
 
     class Plugin(ImgProcessor):
         """ This Processor simply prints the shape of the
@@ -73,7 +73,7 @@ Processors can then be reordered in the the main
 window by dragging and dropping, enabled, disabled, added, and removed.
 A set and order of ImgProcessors, along with a target data directory, is
 referred to as a "plan" and controlled by the
-:code:`llspy.processplan.ProcessPlan` class (which can do some validity
+:code:`mosaicpy.processplan.ProcessPlan` class (which can do some validity
 checking and make assertions about the order of processors).  Plans can
 be saved, recalled, and (hopefully) shared.
 

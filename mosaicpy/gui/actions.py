@@ -1,19 +1,19 @@
 import os
-import llspy
+import mosaicpy
 from PyQt5 import QtCore, uic
 from PyQt5 import QtWidgets as QtW
-from llspy import util
-from llspy.gui import workers, dialogs
-from llspy.gui.helpers import reveal, shortname, newWorkerThread
-from llspy.gui.implist import IMP_DIR
+from mosaicpy import util
+from mosaicpy.gui import workers, dialogs
+from mosaicpy.gui.helpers import reveal, shortname, newWorkerThread
+from mosaicpy.gui.implist import IMP_DIR
 
 Ui_Main_GUI = uic.loadUiType(os.path.join(os.path.dirname(__file__), "main_gui.ui"))[0]
-# form_class = uic.loadUiType('./llspy/gui/main_gui.ui')[0]  # for debugging
+# form_class = uic.loadUiType('./mosaicpy/gui/main_gui.ui')[0]  # for debugging
 
 
-class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
+class MOSAICpyActions(QtW.QMainWindow, Ui_Main_GUI):
     def __init__(self, *args, **kwargs):
-        super(LLSpyActions, self).__init__(*args, **kwargs)
+        super(MOSAICpyActions, self).__init__(*args, **kwargs)
         self.setupUi(self)  # method inherited from form_class to init UI
 
         self.actionReveal.triggered.connect(self.revealSelected)
@@ -29,12 +29,12 @@ class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
         self.actionConcatenate.triggered.connect(self.concatenateSelected)
         self.actionRename_Scripted.triggered.connect(self.renameSelected)
         self.actionUndo_Rename_Iters.triggered.connect(self.undoRenameSelected)
-        self.actionAbout_LLSpy.triggered.connect(self.showAboutWindow)
+        self.actionAbout_MOSAICpy.triggered.connect(self.showAboutWindow)
         self.actionHelp.triggered.connect(self.showHelpWindow)
 
         self.openPluginsAction = self.menuFile.addAction("Open Plugins Folder")
         self.openPluginsAction.triggered.connect(self.showPlugins)
-        self.openPluginsAction = self.menuLLSpy.addAction("Preferences...")
+        self.openPluginsAction = self.menuMOSAICpy.addAction("Preferences...")
         self.openPluginsAction.triggered.connect(self.showPreferences)
 
     def showPlugins(self):
@@ -66,7 +66,7 @@ class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
             )
             if path:
                 for axis in ["z", "y", "x"]:
-                    llspy.llsdir.mergemips(path, axis, dx=0.102, delete=True)
+                    mosaicpy.llsdir.mergemips(path, axis, dx=0.102, delete=True)
 
     def openLLSdir(self):
         path = QtW.QFileDialog.getExistingDirectory(
@@ -90,7 +90,7 @@ class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
 
     def reduceSelected(self):
         for item in self.listbox.selectedPaths():
-            llspy.LLSdir(item).reduce_to_raw(
+            mosaicpy.LLSdir(item).reduce_to_raw(
                 keepmip=self.saveMIPsDuringReduceCheckBox.isChecked()
             )
 
@@ -125,7 +125,7 @@ class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
 
     def freezeSelected(self):
         for item in self.listbox.selectedPaths():
-            llspy.LLSdir(item).reduce_to_raw(
+            mosaicpy.LLSdir(item).reduce_to_raw(
                 keepmip=self.saveMIPsDuringReduceCheckBox.isChecked()
             )
             self.compressItem(item)
@@ -161,7 +161,7 @@ class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
     def concatenateSelected(self):
         selectedPaths = self.listbox.selectedPaths()
         if len(selectedPaths) > 1:
-            llspy.llsdir.concatenate_folders(selectedPaths)
+            mosaicpy.llsdir.concatenate_folders(selectedPaths)
             [self.listbox.removePath(p) for p in selectedPaths]
             [self.listbox.addPath(p) for p in selectedPaths]
 
@@ -169,7 +169,7 @@ class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
         if not hasattr(self.listbox, "renamedPaths"):
             self.listbox.renamedPaths = []
         for item in self.listbox.selectedPaths():
-            llspy.llsdir.rename_iters(item)
+            mosaicpy.llsdir.rename_iters(item)
             self.listbox.renamedPaths.append(item)
             self.listbox.removePath(item)
             [self.listbox.addPath(os.path.join(item, p)) for p in os.listdir(item)]
@@ -214,7 +214,7 @@ class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
                 self.listbox.removePath(root)
                 for d in subd:
                     self.listbox.removePath(os.path.join(root, d))
-            llspy.llsdir.undo_rename_iters(P)
+            mosaicpy.llsdir.undo_rename_iters(P)
         self.listbox.renamedPaths = []
 
     def showAboutWindow(self):
@@ -223,8 +223,8 @@ class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
         now = datetime.datetime.now()
         QtW.QMessageBox.about(
             self,
-            "LLSpy",
-            "LLSpy v.{}\n".format(llspy.__version__)
+            "MOSAICpy",
+            "MOSAICpy v.{}\n".format(mosaicpy.__version__)
             + "Copyright ©  {}, ".format(now.year)
             + "President and Fellows of Harvard College.  All rights "
             "reserved.\n\nDeveloped by Talley Lambert\n\nThe cudaDeconv "
@@ -235,5 +235,5 @@ class LLSpyActions(QtW.QMainWindow, Ui_Main_GUI):
 
     def showHelpWindow(self):
         QtW.QMessageBox.about(
-            self, "LLSpy", "Please see documentation at llspy.readthedocs.io"
+            self, "MOSAICpy", "Please see documentation at mosaicpy.readthedocs.io"
         )

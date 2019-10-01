@@ -1,11 +1,11 @@
 import logging
-import llspy.gui.exceptions as err
+import mosaicpy.gui.exceptions as err
 import os
 from PyQt5 import QtCore, QtGui
 from PyQt5 import QtWidgets as QtW
-from llspy import util, llsdir, processplan
-from llspy.gui import settings, SETTINGS, dialogs
-from llspy.gui.helpers import shortname, newWorkerThread
+from mosaicpy import util, llsdir, processplan
+from mosaicpy.gui import settings, SETTINGS, dialogs
+from mosaicpy.gui.helpers import shortname, newWorkerThread
 
 logger = logging.getLogger(__name__)
 
@@ -351,7 +351,7 @@ class LLSDragDropTable(QtW.QTableWidget):
             return
 
         # check if already processed
-        # if util.pathHasPattern(self.currentPath, '*' + llspy.config.__OUTPUTLOG__):
+        # if util.pathHasPattern(self.currentPath, '*' + mosaicpy.config.__OUTPUTLOG__):
         #     if not self.reprocessCheckBox.isChecked():
         #         msg = 'Skipping! Path already processed: {}'.format(self.currentPath)
         #         logger.info(msg)

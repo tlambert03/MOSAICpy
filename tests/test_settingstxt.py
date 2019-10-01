@@ -1,4 +1,4 @@
-from llspy.settingstxt import parse_settings
+from mosaicpy.settingstxt import parse_settings
 import datetime
 import sys
 import os

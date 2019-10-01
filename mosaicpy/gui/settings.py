@@ -53,7 +53,7 @@ def guisave(widget, qsettings):
     qsettings.setValue(selfName + "_size", widget.size())
     qsettings.setValue(selfName + "_pos", widget.pos())
     for name, obj in inspect.getmembers(widget):
-        # if type(obj) is QComboBox:  # this works similar to isinstance, 
+        # if type(obj) is QComboBox:  # this works similar to isinstance,
         # but missed some field... not sure why?
         get, _, _ = getter_setter_onchange(obj)
         value = get() if get else None

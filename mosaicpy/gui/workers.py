@@ -1,5 +1,5 @@
-import llspy
-import llspy.gui.exceptions as err
+import mosaicpy
+import mosaicpy.gui.exceptions as err
 import numpy as np
 import os
 import sys
@@ -9,14 +9,14 @@ import json
 
 
 from PyQt5 import QtCore
-from llspy.gui.helpers import newWorkerThread, byteArrayToString, shortname
+from mosaicpy.gui.helpers import newWorkerThread, byteArrayToString, shortname
 import logging
 
 logger = logging.getLogger(__name__)  # set root logger
 
 
 try:
-    _CUDABIN = llspy.cudabinwrapper.get_bundled_binary()
+    _CUDABIN = mosaicpy.cudabinwrapper.get_bundled_binary()
 except Exception:
     _CUDABIN = None
 
@@ -36,7 +36,7 @@ class SubprocessWorker(QtCore.QObject):
     def __init__(self, binary, args, env=None, wid=1, **kwargs):
         super(SubprocessWorker, self).__init__()
         self.id = int(wid)
-        self.binary = llspy.util.which(binary)
+        self.binary = mosaicpy.util.which(binary)
         if not binary:
             raise err.MissingBinaryError(
                 "Binary not found or not executable: {}".format(self.binary)
@@ -46,7 +46,7 @@ class SubprocessWorker(QtCore.QObject):
         self.polling_interval = 100
         self.name = "Subprocess"
         self.__abort = False
-        self._logger = logging.getLogger("llspy.worker." + type(self).__name__)
+        self._logger = logging.getLogger("mosaicpy.worker." + type(self).__name__)
 
         self.process = QtCore.QProcess(self)
         self.process.readyReadStandardOutput.connect(self.procReadyRead)
@@ -163,7 +163,7 @@ class CompressionWorker(SubprocessWorker):
                 binary = "pigz"
             else:
                 binary = "lbzip2"
-        binary = llspy.util.which(binary)
+        binary = mosaicpy.util.which(binary)
         if not binary:
             raise err.MissingBinaryError(
                 "No binary found for compression program: {}".format(binary)
@@ -179,22 +179,22 @@ class CompressionWorker(SubprocessWorker):
             self.status_update.emit(
                 "Decompressing {}...".format(shortname(self.path)), 0
             )
-            tar_compressed = llspy.util.find_filepattern(self.path, "*.tar*")
+            tar_compressed = mosaicpy.util.find_filepattern(self.path, "*.tar*")
             tar_extension = os.path.splitext(tar_compressed)[1]
-            if tar_extension not in llspy.compress.EXTENTIONS:
+            if tar_extension not in mosaicpy.compress.EXTENTIONS:
                 self._logger.error("Unexpected uncompressed tar file found")
-                raise err.LLSpyError(
+                raise err.MOSAICpyError(
                     "found a tar file, but don't know how to decompress"
                 )
-            if self.binary not in llspy.compress.EXTENTIONS[tar_extension]:
-                for compbin in llspy.compress.EXTENTIONS[tar_extension]:
-                    if llspy.util.which(compbin):
-                        self.binary = llspy.util.which(compbin)
+            if self.binary not in mosaicpy.compress.EXTENTIONS[tar_extension]:
+                for compbin in mosaicpy.compress.EXTENTIONS[tar_extension]:
+                    if mosaicpy.util.which(compbin):
+                        self.binary = mosaicpy.util.which(compbin)
                         break
             if not self.binary:
                 raise err.MissingBinaryError(
                     "No binary found for compression program: {}".format(
-                        llspy.compress.EXTENTIONS[tar_extension]
+                        mosaicpy.compress.EXTENTIONS[tar_extension]
                     )
                 )
             self.args = ["-dv", tar_compressed]
@@ -203,8 +203,8 @@ class CompressionWorker(SubprocessWorker):
             )
 
         elif self.mode == "compress":
-            if llspy.util.find_filepattern(self.path, "*.tar*"):
-                raise err.LLSpyError(
+            if mosaicpy.util.find_filepattern(self.path, "*.tar*"):
+                raise err.MOSAICpyError(
                     "There are both raw tiffs and a compressed file in "
                     "directory: {}".format(self.path),
                     "If you would like to compress this directory, "
@@ -214,7 +214,7 @@ class CompressionWorker(SubprocessWorker):
                     "This will overwrite any raw tiffs with matching names",
                 )
             self.status_update.emit("Compressing {}...".format(shortname(self.path)), 0)
-            tarball = llspy.compress.tartiffs(self.path)
+            tarball = mosaicpy.compress.tartiffs(self.path)
             self.args = ["-v", tarball]
             self.process.finished.connect(self.finished.emit)
 
@@ -265,7 +265,7 @@ class CompressionWorker(SubprocessWorker):
 #         self.camparams = camparams
 #         self.median = median
 #         self.target = target
-#         self.E = llspy.LLSdir(self.path)
+#         self.E = mosaicpy.LLSdir(self.path)
 
 #     @QtCore.pyqtSlot()
 #     def work(self):
@@ -311,7 +311,7 @@ def divide_arg_queue(E, n_gpus, binary):
                     cudaOpts["filename-pattern"] = "_ch{}_".format(chan)
                 else:
                     cudaOpts["filename-pattern"] = "_ch{}_stack{}".format(
-                        chan, llspy.util.pyrange_to_perlregex(tRange)
+                        chan, mosaicpy.util.pyrange_to_perlregex(tRange)
                     )
 
                 argQueue.append(binary.assemble_args(**cudaOpts))
@@ -346,12 +346,12 @@ class LLSitemWorker(QtCore.QObject):
     def __init__(self, lls_dir, wid, opts, **kwargs):
         super(LLSitemWorker, self).__init__()
 
-        if isinstance(lls_dir, llspy.LLSdir):
+        if isinstance(lls_dir, mosaicpy.LLSdir):
             self.E = lls_dir
             self.path = str(self.E.path)
         else:
             self.path = str(lls_dir)
-            self.E = llspy.LLSdir(self.path)
+            self.E = mosaicpy.LLSdir(self.path)
 
         self.__id = int(wid)
         self.opts = opts
@@ -364,7 +364,7 @@ class LLSitemWorker(QtCore.QObject):
             self.error.emit()
             raise err.InvalidSettingsError("No GPUs selected. Check Config Tab")
 
-        self._logger = logging.getLogger("llspy.worker." + type(self).__name__)
+        self._logger = logging.getLogger("mosaicpy.worker." + type(self).__name__)
 
     @QtCore.pyqtSlot()
     def work(self):
@@ -404,7 +404,7 @@ class LLSitemWorker(QtCore.QObject):
                     "Correcting Flash artifact on {}".format(self.E.basename)
                 )
                 self.E.path = self.E.correct_flash(**self.P)
-            except llspy.llsdir.LLSpyError:
+            except mosaicpy.llsdir.MOSAICpyError:
                 self.error.emit()
                 raise
         # if not flash correcting but there is trimming/median filter requested
@@ -426,7 +426,7 @@ class LLSitemWorker(QtCore.QObject):
 
             try:
                 # check the binary path and create object
-                binary = llspy.cudabinwrapper.CUDAbin(_CUDABIN)
+                binary = mosaicpy.cudabinwrapper.CUDAbin(_CUDABIN)
             except Exception:
                 self.error.emit()
                 raise
@@ -564,7 +564,7 @@ class LLSitemWorker(QtCore.QObject):
         # if we did camera correction, move the resulting processed folders to
         # the parent folder, and optionally delete the corrected folder
         if self.P.moveCorrected and self.E.path.name == "Corrected":
-            llspy.llsdir.move_corrected(str(self.E.path))
+            mosaicpy.llsdir.move_corrected(str(self.E.path))
             self.E.path = self.E.path.parent
 
         if not self.P.keepCorrected:
@@ -577,12 +577,12 @@ class LLSitemWorker(QtCore.QObject):
         if self.P.writeLog:
             outname = str(
                 self.E.path.joinpath(
-                    "{}_{}".format(self.E.basename, llspy.config.__OUTPUTLOG__)
+                    "{}_{}".format(self.E.basename, mosaicpy.config.__OUTPUTLOG__)
                 )
             )
             try:
                 with open(outname, "w") as outfile:
-                    json.dump(self.P, outfile, cls=llspy.util.paramEncoder)
+                    json.dump(self.P, outfile, cls=mosaicpy.util.paramEncoder)
             except FileNotFoundError:
                 self._logger.error("Could not write processing log file.")
 
@@ -610,18 +610,18 @@ class TimePointWorker(QtCore.QObject):
     def __init__(self, lls_dir, tRange, cRange, opts, ditch_partial=True, **kwargs):
         super(TimePointWorker, self).__init__()
 
-        if isinstance(lls_dir, llspy.LLSdir):
+        if isinstance(lls_dir, mosaicpy.LLSdir):
             self.E = lls_dir
             self.path = str(self.E.path)
         else:
             # assume it's a string
             self.path = str(lls_dir)
-            self.E = llspy.LLSdir(self.path, ditch_partial)
+            self.E = mosaicpy.LLSdir(self.path, ditch_partial)
 
         self.tRange = tRange
         self.cRange = cRange
         self.opts = opts
-        self._logger = logging.getLogger("llspy.worker." + type(self).__name__)
+        self._logger = logging.getLogger("mosaicpy.worker." + type(self).__name__)
 
     @QtCore.pyqtSlot()
     def work(self):
