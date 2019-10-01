@@ -549,7 +549,7 @@ class ImgProcessSelector(QtWidgets.QDialog):
 
     def _try_import_imgp(self, obj):
         try:
-            if issubclass(obj, ImgProcessor) and ImgProcessor in obj.__bases__:
+            if issubclass(obj, ImgProcessor):
                 if inspect.isabstract(obj):
                     raise self.PluginImportError(
                         f'Detected an ImgProcessor plugin named "{obj.__name__}"'
