@@ -152,7 +152,7 @@ QLabel { qproperty-alignment: AlignRight; }
        <number>0</number>
       </property>
       <property name="bottomMargin">
-       <number>0</number>
+       <number>10</number>
       </property>
       <property name="verticalSpacing">
        <number>4</number>
