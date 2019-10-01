@@ -76,3 +76,11 @@ referred to as a "plan" and controlled by the
 :code:`llspy.processplan.ProcessPlan` class (which can do some validity
 checking and make assertions about the order of processors).  Plans can
 be saved, recalled, and (hopefully) shared.
+
+
+To Do:
+------
+
+* Figure out how to deal with "forks" in the processing path.  For instance,
+  decon/deskew will have both deconvolved output and deskewed output.
+  Possibly... turn that into a deskew step, then tiffwriter, then decon step.
