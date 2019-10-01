@@ -18,7 +18,7 @@ class TiffWriter(ImgWriter):
     processing_verb = "Writing Tiff"
     hint = "Output Dir {datadir} = relative to data being processed"
 
-    def __init__(self, output_dir="{datadir}", frmt="ch{c:01d}_stack{t:04d}_{w}nm.tif"):
+    def __init__(self, output_dir="{datadir}/result", frmt="ch{c:01d}_stack{t:04d}_{w}nm.tif"):
         self.output_dir = output_dir
         self.format = frmt
 
