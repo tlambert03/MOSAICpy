@@ -50,10 +50,8 @@ might look something like this.
   :code:`{'parameter': (min, max)}` key-value pairs, where :code:`parameter`
   matches one of the arguments in the :func:`__init__` method, the tuple
   contains the min and max valid values accepted by that parameter.
-- **guidoc:** - To provide a brief help string in the GUI, put the word
-  :code:`guidoc:` (with the colon) anywhere in the class docstring.  Everything
-  between the :code:`guidoc:` string and the line ending will be extracted and
-  shown in the GUI.
+- **hint** - To provide a brief help string in the GUI, add a class attribute
+  :code:`hint`.
 - **verbose_help** - To provide more extensive documentation, provide a
   :code:`verbose_help` class attribute with a string value (can be a multiline
   string). If provided, a help button will appear at the top right of the
@@ -73,12 +71,7 @@ as rendered in the GUI, and the corresponding python class
     from mosaicpy import ImgProcessor
 
     class SelectiveMedianProcessor(ImgProcessor):
-        """correct noisy pixels on sCMOS camera.
-
-        guidoc: selective median filter as in Amat 2015
-        """
-        # ^ note - when "guidoc:" appears in the docstring, that line will
-        # be extracted and will appear at the bottom right of the widget.
+        """Correct noisy pixels on sCMOS camera."""
 
         # `verbose_name` changes the name as it appears in the gui
         verbose_name = 'Selective Median Filter'
@@ -103,6 +96,8 @@ as rendered in the GUI, and the corresponding python class
             'background': (0, 1000),
             'median_range': (1, 9),
         }
+
+        hint = "Selective median filter as in Amat 2015"
 
         def __init__(self, background=0, median_range=3, with_mean=True):
             """The gui generates the appropriate widget value type by

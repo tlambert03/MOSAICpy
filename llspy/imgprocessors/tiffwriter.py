@@ -12,12 +12,11 @@ except (ImportError, AttributeError):
 
 class TiffWriter(ImgWriter):
     """ Subclass of affine processor, for simplified rotation of the image in Y
-
-    guidoc: Output Dir {datadir} = relative to data being processed
     """
 
     verbose_name = "Write Tiff"
     processing_verb = "Writing Tiff"
+    hint = "Output Dir {datadir} = relative to data being processed"
 
     def __init__(self, output_dir="{datadir}", frmt="ch{c:01d}_stack{t:04d}_{w}nm.tif"):
         self.output_dir = output_dir

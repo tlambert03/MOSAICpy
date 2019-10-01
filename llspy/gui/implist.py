@@ -110,6 +110,27 @@ def imp_settings_key(imp, key):
     return "imps/{}/{}".format(imp.__name__, key)
 
 
+class HelpWindow(QtWidgets.QWidget):
+    def __init__(self, text, title=None):
+        super().__init__()
+        self.vlay = QtWidgets.QVBoxLayout()
+        self.setLayout(self.vlay)
+        if title is not None:
+            self.label = QtWidgets.QLabel()
+            self.label.setText(title)
+            self.label.setStyleSheet("font-weight: bold; font-size: 20px")
+            self.vlay.addWidget(self.label)
+        self.text = QtWidgets.QTextEdit()
+        self.vlay.addWidget(self.text)
+        self.text.setText(text)
+        self.text.setReadOnly(True)
+        # center window on screen
+        qtRectangle = self.frameGeometry()
+        centerPoint = QtWidgets.QDesktopWidget().availableGeometry().center()
+        qtRectangle.moveCenter(centerPoint)
+        self.setGeometry(qtRectangle.left(), qtRectangle.top(), 650, 300)
+
+
 class ImpFrame(QtWidgets.QFrame, Ui_ImpFrame):
     """ Class for each image processor in the ImpList
 
@@ -205,27 +226,21 @@ class ImpFrame(QtWidgets.QFrame, Ui_ImpFrame):
             self.contentLayout.addWidget(widg, *widget_index)
 
         doc = inspect.getdoc(self.imp)
-        if "guidoc:" in doc:
-            docstring = doc.split("guidoc:")[1].split("\n")[0].strip()
-            doclabel = QtWidgets.QLabel(docstring)
+        if hasattr(self.imp, "hint"):
+            doclabel = QtWidgets.QLabel(self.imp.hint)
             doclabel.setStyleSheet("font-style: italic; color: #777;")
-            self.contentLayout.addWidget(
-                doclabel,
-                self.contentLayout.rowCount(),
-                0,
-                1,
-                self.contentLayout.columnCount(),
-            )
+            nrow = self.contentLayout.rowCount()
+            ncol = self.contentLayout.columnCount()
+            self.contentLayout.addWidget(doclabel, nrow, 0, 1, ncol)
 
         # help button
-        if hasattr(self.imp, "verbose_help"):
+        # if hasattr(self.imp, "verbose_help"):
+        if doc:
             self.helpButton = QtWidgets.QPushButton()
             self.helpButton.setFlat(True)
             self.helpButton.setObjectName("helpButton")
             self.helpButton.setText("?")
-            self.helpButton.clicked.connect(
-                lambda: self.showHelp(self.imp.name(), self.imp.verbose_help)
-            )
+            self.helpButton.clicked.connect(lambda: self.showHelp(self.imp.name(), doc))
             self.titleLayout.insertWidget(4, self.helpButton)
 
         self.contentLayout.setColumnStretch(self.contentLayout.columnCount() - 1, 1)
@@ -244,13 +259,8 @@ class ImpFrame(QtWidgets.QFrame, Ui_ImpFrame):
         self.stateChanged.emit()
 
     def showHelp(self, title, text):
-        box = QtWidgets.QMessageBox()
-        box.setWindowTitle(title)
-        box.setText(text)
-        box.setIcon(QtWidgets.QMessageBox.Information)
-        box.addButton(QtWidgets.QMessageBox.Ok)
-        box.setDefaultButton(QtWidgets.QMessageBox.Ok)
-        box.exec_()
+        self.box = HelpWindow(text, title)
+        self.box.show()
 
     def set_param(self, key, getter, dtype):
         """ update the parameter dict when the widg has changed """

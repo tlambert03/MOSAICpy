@@ -48,7 +48,7 @@ class ProcessPlan(object):
     def check_sanity(self):
         # sanity checkes go here...
         warnings = []
-        writers = [issubclass(p[0], ImgWriter) for p in self.imp_classes]
+        writers = [issubclass(imp, ImgWriter) for imp, p, act, _ in self.imp_classes if act]
         if not any(writers):
             warnings.append("No Image writer/output detected.")
         try:
@@ -87,6 +87,10 @@ class ProcessPlan(object):
             try:
                 self.imps.append(imp.from_llsdir(self.llsdir, **params))
             except imp.ImgProcessorError as e:
+                errors.append("%s:  " % imp.name() + str(e))
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
                 errors.append("%s:  " % imp.name() + str(e))
 
         if errors:

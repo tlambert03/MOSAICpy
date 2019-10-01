@@ -88,9 +88,9 @@ class BitDepth(Enum):
     float32 = "32-bit"
 
     def _missing_(value):
-        if '16' in str(value):
+        if "16" in str(value):
             return BitDepth.uint16
-        if '32' in str(value):
+        if "32" in str(value):
             return BitDepth.float32
 
 
@@ -226,8 +226,8 @@ class FlashProcessor(ImgProcessor):
                     "when requesting FlashProcessor "
                     "on the gpu".format(self.target)
                 )
-            a, b, offset = self.cam_params.data[:3]
-            camcor_init(data_shape, a, b, offset)
+            *a, b, c = data_shape
+            camcor_init((np.prod(a), b, c), self.cam_params.data)
         super(FlashProcessor, self).__init__()
 
     @interleaved
@@ -252,15 +252,13 @@ class FlashProcessor(ImgProcessor):
 
 
 class SelectiveMedianProcessor(ImgProcessor):
-    """correct bad pixels on sCMOS camera.
-
-    guidoc: selective median filter as in Amat 2015
-    """
+    """Correct bad pixels on sCMOS camera."""
 
     verbose_name = "Selective Median Filter"
     processing_verb = "Performing Median Filter"
     gui_layout = {"background": (0, 1), "median_range": (0, 0), "with_mean": (0, 2)}
     valid_range = {"background": (0, 1000), "median_range": (1, 9)}
+    hint = "selective median filter as in Amat 2015"
 
     def __init__(self, background=0, median_range=3, with_mean=True):
         super(SelectiveMedianProcessor, self).__init__()
@@ -283,8 +281,6 @@ class SelectiveMedianProcessor(ImgProcessor):
 
 class DivisionProcessor(ImgProcessor):
     """ Divides and image by another image, e.g. for flatfield correction
-
-    guidoc: divisor can be tiff file or LLSdir, with flatfield image
     """
 
     class Projector(Enum):
@@ -293,6 +289,7 @@ class DivisionProcessor(ImgProcessor):
 
     verbose_name = "Flatfield Correction"
     projectors = {"mean": lambda x: np.mean(x, 0), "max": lambda x: np.max(x, 0)}
+    hint = "divisor can be tiff file or LLSdir, with flatfield image"
 
     def __init__(self, divisor_path="", offset=90, projection=Projector.mean):
         if isinstance(divisor_path, str):
