@@ -6,6 +6,7 @@ from mosaicpy.llsdir import LLSdir
 
 
 def test_basic_processing(qtbot):
+    print('basic')
     testdata = os.path.join(os.path.dirname(__file__), 'testdata', 'sample')
     n_testfiles = len(os.listdir(testdata))
     otfdir = os.path.join(os.path.dirname(__file__), 'testdata', 'otfs')

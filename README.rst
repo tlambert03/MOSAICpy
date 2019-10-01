@@ -13,9 +13,8 @@ Copyright |copy| 2019 Talley Lambert, Harvard Medical School.
 
 |
 
-*NOTE: this is very much a work in progress and is not ready
-for routine use. There are many broken imports, and residual llspy
-references still.*
+*NOTE: this is very much a work in progress... It is broken in many ways and
+you should probably not waste your time on it*
 
 
 Basic Idea
