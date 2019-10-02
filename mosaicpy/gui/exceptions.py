@@ -198,16 +198,19 @@ class ExceptionHandler(QtCore.QObject):
         elif "0xe06d7363" in str(value).lower():
             self.handleCUDA_CL_Error(*err_info)
         else:  # uncaught exceptions go to sentry
-            if SETTINGS.value(settings.ALLOW_BUGREPORT.key, True):
-                logger.info("Sending bug report")
-                try:
-                    sentry_sdk.capture_exception(err_info)
-                except Exception:
-                    pass
+            self.send_to_sentry(err_info)
             detail = "".join(traceback.format_exception(*err_info))
             self.errorMessage.emit(str(value), etype.__name__, "", detail)
-            print("!" * 50)
+            print("\n" + "!" * 50)
             traceback.print_exception(*err_info)
+
+    def send_to_sentry(self, err_info):
+        if SETTINGS.value(settings.ALLOW_BUGREPORT.key, True):
+            logger.info("Sending bug report")
+            try:
+                sentry_sdk.capture_exception(err_info)
+            except Exception:
+                pass
 
     def handleMOSAICpyError(self, etype, value, tb):
         tbstring = "".join(traceback.format_exception(etype, value, tb))
@@ -232,7 +235,12 @@ class ExceptionHandler(QtCore.QObject):
         )
 
     def handleProcessError(self, etype, value, tb):
-        cause = value.__cause__ or value
-        tbstring = "".join(traceback.format_exception(etype, cause, tb))
+        self.send_to_sentry((etype, value, tb))
         title = "ProcessError"
-        self.errorMessage.emit(value.msg, title, cause.msg, tbstring)
+        tbstring = "".join(traceback.format_exception(etype, value, tb))
+        info = str(value.__cause__ or value)
+        info += (
+            f"\n\nIf the {value.imp.name()} processor is a custom plugin, you may "
+            + "want to send the author the stack trace in the details below."
+        )
+        self.errorMessage.emit(str(value), title, info, tbstring)

@@ -111,7 +111,8 @@ class ProcessPlan(object):
             "nt": len(self.t_range),
             "w": [self.llsdir.params.wavelengths[i] for i in self.c_range],
             "params": self.llsdir.params,
-            "has_background": True,
+            "has_background": True,  # whether background has been subtracted yet
+            "axes": None,
         }
 
     def execute(self):
