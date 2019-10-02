@@ -472,7 +472,6 @@ class CUDADeconProcessor(ImgProcessor):
 
     def _process_channel(self, data, wave, meta):
         otf = choose_otf(wave, self.otf_dir, meta["params"].date, meta["params"].mask)
-
         # TODO: expose shift and width parameters
         with RLContext(
             data.shape,
@@ -503,8 +502,14 @@ class CUDADeconProcessor(ImgProcessor):
     def from_llsdir(cls, llsdir, **kwargs):
         if not any(llsdir.params.wavelengths):
             raise cls.ImgProcessorError(
-                "Cannot perform Decon on a dataset " "with unknown wavelengths"
+                "Cannot perform Decon on dataset with unknown wavelengths"
             )
+        otfd = kwargs.get("otf_dir")
+        for w in llsdir.params.wavelengths:
+            if not choose_otf(w, otfd):
+                raise cls.ImgProcessorError(
+                    f"OTF_dir {otfd} has no OTF for wavelength {w}"
+                )
         return cls(**kwargs)
 
 
