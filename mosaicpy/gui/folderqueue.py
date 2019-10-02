@@ -373,6 +373,7 @@ class LLSDragDropTable(QtW.QTableWidget):
             if msg.exec_() == QtW.QMessageBox.Ok:
                 plan.plan(skip_warnings=True)
             else:
+                self.on_work_finished()
                 return
         except plan.PlanError as e:
             if self.inProcess:

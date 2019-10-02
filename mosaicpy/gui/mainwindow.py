@@ -237,9 +237,9 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
         self.actionAbort.setEnabled(True)
 
     def sendAbort(self):
-        self.listbox.abort_workers()
         self.processButton.setText("ABORTING...")
         self.processButton.setDisabled(True)
+        self.listbox.abort_workers()
 
     def enableProcessButton(self):
         # change Process button back to "Process" and udpate menu items
