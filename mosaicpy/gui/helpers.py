@@ -52,12 +52,18 @@ class IgnoreMouseWheel(QtCore.QObject):
         event.ignore()
 
 
-class NoScrollSpin(IgnoreMouseWheel, QtWidgets.QSpinBox):
-    pass
+try:
+
+    class NoScrollSpin(QtWidgets.QSpinBox, IgnoreMouseWheel):
+        pass
+
+    class NoScrollDoubleSpin(QtWidgets.QDoubleSpinBox, IgnoreMouseWheel):
+        pass
 
 
-class NoScrollDoubleSpin(IgnoreMouseWheel, QtWidgets.QDoubleSpinBox):
-    pass
+except TypeError:
+    NoScrollSpin = object
+    NoScrollDoubleSpin = object
 
 
 class FileDialogLineEdit(QtWidgets.QFrame):
