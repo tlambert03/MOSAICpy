@@ -52,11 +52,11 @@ class IgnoreMouseWheel(QtCore.QObject):
         event.ignore()
 
 
-class NoScrollSpin(QtWidgets.QSpinBox, IgnoreMouseWheel):
+class NoScrollSpin(IgnoreMouseWheel, QtWidgets.QSpinBox):
     pass
 
 
-class NoScrollDoubleSpin(QtWidgets.QDoubleSpinBox, IgnoreMouseWheel):
+class NoScrollDoubleSpin(IgnoreMouseWheel, QtWidgets.QDoubleSpinBox):
     pass
 
 
