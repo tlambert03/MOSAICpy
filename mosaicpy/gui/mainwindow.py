@@ -217,7 +217,8 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
             self.progressBar.setStyleSheet(progress_gradient("#FF8C00", "#FFA500"))
             return
         if numfinished:
-            summary = "Successfully Processed {} Items!".format(numfinished)
+            s = 's' if numfinished > 1 else ''
+            summary = f"Successfully Processed {numfinished} Item{s}!"
         else:
             summary = "Ready"
         if numskipped:

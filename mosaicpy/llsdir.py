@@ -42,8 +42,8 @@ class LLSParams(MutableMapping):
         nt, nc, nz, ny, nx: shape of the dataset originally detected from
             settings.txt, but updated with actual data
         time (dict): contains time info:
-            abs: list of absolute timestamps
-            rel: list of relative timestamps
+            abs_t: list of absolute timestamps
+            rel_t: list of relative timestamps
             t: list of timepoints in filenames (e.g. stack0003 -> 3)
             interval: mode interval of timepoints
         channels (dict): information from each channel
@@ -114,8 +114,8 @@ class LLSFolder(TiffFolder):
     """ Example class for handling lattice light sheet data """
 
     patterns = [
-        ("rel", "_{d7}msec"),
-        ("abs", "_{d10}msecAbs"),
+        ("rel_t", "_{d7}msec"),
+        ("abs_t", "_{d10}msecAbs"),
         ("w", "_{d3}nm"),
         ("t", "_stack{d4}"),
         ("c", "_ch{d1}"),
@@ -139,8 +139,8 @@ class LLSFolder(TiffFolder):
                         "interval": mode1(
                             np.subtract(cdict["abs"][1:], cdict["abs"][:-1])
                         ),
-                        "rel": cdict.get("rel"),
-                        "abs": cdict.get("abs"),
+                        "rel_t": cdict.get("rel"),
+                        "abs_t": cdict.get("abs"),
                         "t": cdict.get("t"),
                     }
                 except Exception:
@@ -161,7 +161,14 @@ class LLSFolder(TiffFolder):
         return _D
 
 
-class LLSdir(object):
+class DataDir:
+    """Abstract Object to represent a data directory"""
+
+    class NoDataError(Exception):
+        """ Exception raised when the provided folder has no data to process """
+
+
+class LLSdir(DataDir):
     def __init__(self, path, patterns=None):
         self.path = Path(path)
         if not self.path.is_dir():
@@ -176,17 +183,12 @@ class LLSdir(object):
         self.params["date"] = self.settings.get("date") or datetime.now()
         self.params.update(self.data.coreparams)
 
-    @property
-    def is_ready(self):
-        """Returns true if the path has data and enough params to process"""
-        return bool(len(self.data) and self.params["dz"] and self.params["dx"])
+    # @property
+    # def is_ready(self):
+    #     """Returns true if the path has data and enough params to process"""
+    #     return bool(len(self.data) and self.params["dz"] and self.params["dx"])
 
     @property
     def age(self):
         """Returns the age of the dataset in age"""
         return (datetime.now() - self.date).days
-
-    class NoDataError(Exception):
-        """ Exception raised when the provided folder has no data to process """
-
-        pass
