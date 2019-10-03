@@ -5,7 +5,8 @@ Welcome to MOSAICpy's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   usage/imgprocessors
+   pages/rationale
+   pages/imgprocessors
 
 Indices and tables
 ==================

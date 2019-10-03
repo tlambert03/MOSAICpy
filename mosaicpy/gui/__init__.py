@@ -22,7 +22,7 @@ ch.addFilter(logging.Filter("mosaicpy"))  # and any filters
 logger.addHandler(ch)  # add it to the root logger
 # logger.removeHandler(lhStdout)  # and delete the original streamhandler
 
-APP_DIR = user_data_dir(__appname__)
+APP_DIR = str(user_data_dir(__appname__))
 IMP_DIR = os.path.join(APP_DIR, "plugins")
 PLAN_DIR = os.path.join(APP_DIR, "process_plans")
 REG_DIR = os.path.join(APP_DIR, "regfiles")

@@ -14,7 +14,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 logger = logging.getLogger(__name__)
 framepath = os.path.join(os.path.dirname(__file__), "frame.ui")
-Ui_ImpFrame = uic.loadUiType(framepath)[0]
+try:
+    Ui_ImpFrame = uic.loadUiType(framepath)[0]
+except TypeError:
+    # this is just here to prevent an exception when building the docs and mocking uic
+    Ui_ImpFrame = object
 
 # if os.path.exists(IMP_DIR):
 #     if IMP_DIR not in sys.path:
