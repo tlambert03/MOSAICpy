@@ -14,6 +14,15 @@ cudaLib = load_lib("libcudaDeconv")
 
 if not cudaLib:
     logger.error("Could not load libcudaDeconv!  Read docs for more info")
+    Deskew_interface = None
+    Affine_interface = None
+    Affine_interface_RA = None
+    camcor_interface_init = None
+    camcor_interface = None
+    RL_interface_init = None
+    RL_interface = None
+    RL_cleanup = None
+    cuda_reset = None
 else:
     logger.info("Loaded libcudaDeconv: {}".format(cudaLib))
     try:
