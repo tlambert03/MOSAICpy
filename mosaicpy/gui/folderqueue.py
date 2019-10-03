@@ -47,7 +47,8 @@ class QueueItemWorker(QtCore.QObject):
     def work(self):
         self.work_starting.emit(len(self.plan.t_range))
         try:
-            self.plan.execute()
+            for d in self.plan.execute():
+                pass
         except Exception as e:
             self.item_errored.emit(e)
         else:
@@ -433,7 +434,7 @@ class LLSDragDropTable(QtW.QTableWidget):
 
     @QtCore.pyqtSlot(object)
     def on_item_error(self, e):
-        # raise(e)
+        raise(e)
         print("ITEM ERROR")
         print(e)
         self.cleanup_last_worker()

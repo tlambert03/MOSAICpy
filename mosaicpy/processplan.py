@@ -1,8 +1,5 @@
+from mosaicpy.imgprocessors import ImgProcessor, ImgWriter
 from mosaicpy.llsdir import LLSdir
-from mosaicpy.imgprocessors import ImgProcessor, ImgWriter, CUDADeconProcessor
-from mosaicpy.libcudawrapper import cuda_reset
-from mosaicpy.otf import choose_otf
-from mosaicpy.libcudawrapper import RLContext
 
 
 class ProcessPlan(object):
@@ -115,37 +112,38 @@ class ProcessPlan(object):
             "axes": None,
         }
 
+    def setup_t(self, data):
+        """Called before all ImgProcs, at every timepoint."""
+        for n, imp in enumerate(self.imps):
+            try:
+                imp.setup_t(data, self.meta)
+            except Exception as err:
+                raise self.SetupError(imp, n) from err
+
+    def teardown_t(self, data):
+        """Called after every ImgProcs, at every timepoint."""
+        for n, imp in enumerate(self.imps):
+            try:
+                imp.teardown_t(data, self.meta)
+            except Exception as err:
+                raise self.TeardownError(imp, n) from err
+
     def execute(self):
         """executes the processing plan, iterating over timepoints"""
-        decons = [isinstance(i, CUDADeconProcessor) for i in self.imps]
         for t in self.t_range:
             if self.aborted:
                 break
             data = self.llsdir.data.asarray(t=t, c=self.c_range)
             self.meta["t"] = t
             self.meta["axes"] = data.axes
-            self._execute_t(data, decons)
+            self.setup_t(data)
+            try:
+                yield self._execute_t(data)
+            finally:
+                self.teardown_t(data)
 
-    def _execute_t(self, data, decons):
-        # FIXME: this decon setup logic should go somewhere in the Decon ImgProcessor
-        if len(self.c_range) == 1 and any(decons):
-            wave = self.meta["w"][0]
-            otf_dir = self.imps[decons.index(True)].otf_dir
-            width = self.imps[decons.index(True)].width
-            otf = choose_otf(
-                wave, otf_dir, self.meta["params"].date, self.meta["params"].mask
-            )
-            with RLContext(
-                data.shape,
-                otf,
-                self.meta["params"].dz,
-                deskew=self.meta["params"].deskew,
-                width=width,
-            ) as ctx:
-                self.meta["out_shape"] = ctx.out_shape
-                return self._iterimps(data)
-        else:
-            return self._iterimps(data)
+    def _execute_t(self, data):
+        return self._iterimps(data)
 
     def _iterimps(self, data):
         for n, imp in enumerate(self.imps):
@@ -153,7 +151,6 @@ class ProcessPlan(object):
                 data, self.meta = imp(data, self.meta)
             except Exception as err:
                 raise self.ProcessError(imp, n) from err
-        cuda_reset()
         return data, self.meta
 
     class PlanError(Exception):
@@ -176,6 +173,12 @@ class ProcessPlan(object):
             self.imp = imp  # the img processor that cause the error
             self.position = position  # the position of the Imp that cause the problem
 
+    class SetupError(ProcessError):
+        pass
+
+    class TeardownError(ProcessError):
+        pass
+
 
 class PreviewPlan(ProcessPlan):
     """ Subclass of ProcessPlan that strips all ImgWriters and turns
@@ -184,6 +187,7 @@ class PreviewPlan(ProcessPlan):
 
     def __init__(self, *args, **kwargs):
         super(PreviewPlan, self).__init__(*args, **kwargs)
+        # remove any writers
         self.imp_classes = [
             i for i in self.imp_classes if not issubclass(i[0], ImgWriter)
         ]
@@ -191,14 +195,3 @@ class PreviewPlan(ProcessPlan):
     def check_sanity(self):
         # overwriting parent method that looks for writers
         pass
-
-    def execute(self):
-        # overwrite parent method to create generator
-        decons = [isinstance(i, CUDADeconProcessor) for i in self.imps]
-        for t in self.t_range:
-            if self.aborted:
-                break
-            data = self.llsdir.data.asarray(t=t, c=self.c_range)
-            self.meta["t"] = t
-            self.meta["axes"] = data.axes
-            yield self._execute_t(data, decons)

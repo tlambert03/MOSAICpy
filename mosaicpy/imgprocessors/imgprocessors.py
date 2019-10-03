@@ -10,7 +10,9 @@ from mosaicpy.libcudawrapper import (
     RLContext,
     deskewGPU,
     rotateGPU,
+    cuda_reset
 )
+
 from mosaicpy.camera import CameraParameters, calc_correction, selectiveMedianFilter
 from mosaicpy.arrayfun import (
     interleave,
@@ -18,6 +20,7 @@ from mosaicpy.arrayfun import (
     sub_background,
     detect_background,
 )
+
 from mosaicpy.util import imread
 from mosaicpy import LLSdir
 from mosaicpy.otf import choose_otf
@@ -128,6 +131,12 @@ class ImgProcessor(ABC):
     def verb(cls):
         """ look for attribute called verbose_name, otherwise return class name"""
         return getattr(cls, "processing_verb", cls.name())
+
+    def setup_t(self, data, meta):
+        pass
+
+    def teardown_t(self, data, meta):
+        pass
 
     @abstractmethod
     def process(self, data, meta):
@@ -482,10 +491,32 @@ class CUDADeconProcessor(ImgProcessor):
         ) as ctx:
             return self._decon(data, ctx.out_shape)
 
+    def setup_t(self, data, meta):
+        if meta.get("nc") == 1:
+            wave = meta.get("w")[0]
+            otf = choose_otf(
+                wave, self.otf_dir, meta["params"].date, meta["params"].mask
+            )
+            self.ctx = RLContext(
+                data.shape,
+                otf,
+                meta["params"].dz,
+                deskew=meta["params"].deskew,
+                width=self.width,
+            )
+            self.ctx.__enter__()
+            meta["out_shape"] = self.ctx.out_shape
+
+    def teardown_t(self, data, meta):
+        cuda_reset()
+        if hasattr(self, "ctx"):
+            self.ctx.__exit__(None, None, None)
+            delattr(self, 'ctx')
+
     @without_background
     def process(self, data, meta):
-        if len(meta["c"]) > 1:
-            for c in range(len(meta["c"])):
+        if meta.get("nc") > 1:
+            for c in range(meta.get("nc")):
                 wave = meta["w"][c]
                 if c == 0:
                     d = self._process_channel(data[c], wave, meta)
