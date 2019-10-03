@@ -10,7 +10,7 @@ from mosaicpy.libcudawrapper import (
     RLContext,
     deskewGPU,
     rotateGPU,
-    cuda_reset
+    cuda_reset,
 )
 
 from mosaicpy.camera import CameraParameters, calc_correction, selectiveMedianFilter
@@ -150,15 +150,16 @@ class ImgProcessor(ABC):
             meta (dict): Information about the data.  This dict is
                 initialized by the `ProcessPlan` instance that executes
                 the image processor, but can be modified during processing
-                by each ImgProcessor in the chain.
-                API is still unset, but current values will be:
-                    axes (str): name of axes for each dimension
-                    t (int, list): timepoint(s) in the current data volume
-                    c (list): channel(s) in the current data volume
-                    w (list): wavelength(s) in the current data volume
-                        where len(w) must == len(c)
-                    params (dict): full llsdir.params dict
-                    has_background (bool): whether background has been subbed
+                by each ImgProcessor in the chain. The API is still in flux,
+                but current values will be:
+
+                    - axes (str): name of axes for each dimension
+                    - t (int, list): timepoint(s) in the current data volume
+                    - c (list): channel(s) in the current data volume
+                    - w (list): wavelength(s) in the current data, where len(w) == len(c)
+                    - params (dict): full llsdir.params dict
+                    - has_background (bool): whether background has been subbed
+
         Returns:
             tuple: (processed `data`, modified `meta`
         """
@@ -511,7 +512,7 @@ class CUDADeconProcessor(ImgProcessor):
         cuda_reset()
         if hasattr(self, "ctx"):
             self.ctx.__exit__(None, None, None)
-            delattr(self, 'ctx')
+            delattr(self, "ctx")
 
     @without_background
     def process(self, data, meta):

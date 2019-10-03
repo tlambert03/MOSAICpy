@@ -1,22 +1,22 @@
-.. role:: python(code)
-    :language: python
+.. _img-processors:
 
-The :code:`ImgProcessor` Class
-==============================
+The :class:`ImgProcessor` Class
+===============================
 
-The :class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>` is
-the key class that controls the flow of image processing in MOSAICpy. Each
+
+The :class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>`
+is the key class that controls the flow of image processing in MOSAICpy. Each
 processor accepts a numpy array (the data) along with the metadata object, does
 *something* with the data and/or metadata, then passes them both on to the next
 processor.  MOSAICpy takes care of converting all
-:class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>` s into a
-graphical interface in the MOSAICpy GUI, by introspecting the :func:`__init__`
-signature for parameter names, types, and default values.
+:class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>` s
+into a graphical interface in the MOSAICpy GUI, by introspecting the
+:func:`__init__` signature for parameter names, types, and default values.
 
 All :class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>`
 subclasses should override the :func:`process` method.
 
-A very simple
+A very simple (albeit useless)
 :class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>`
 might look something like this.
 
@@ -35,28 +35,28 @@ might look something like this.
 :class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>`
 **options:**
 
-- **verbose_name** - Provide a :code:`verbose_name` class attribute to change
+- **verbose_name** - Provide a :attr:`verbose_name` class attribute to change
   how the name of the processor appears in the GUI.  Otherwise, the name of the
   class will be used in the GUI with :code:`CamelCaseWord` split into
   :code:`Camel Case Word`
-- **processing_verb** - Provide a :code:`processing_verb` class attribute to
+- **processing_verb** - Provide a :attr:`processing_verb` class attribute to
   change the message shown in the status bar during processing.
 - **gui_layout** - To override the way the widgets are laid out in the GUI,
-  override the :code:`gui_layout` class attribute, providing a dict of
-  :code:`{'parameter': (row,column)}` key-value pairs, where :code:`parameter`
+  override the :attr:`gui_layout` class attribute, providing a dict of
+  :code:`{'parameter': (row, column)}` key-value pairs, where :code:`parameter`
   matches one of the arguments in the :func:`__init__` method.
 - **valid_range** - To restrict the acceptable range of numeric parameters,
-  override the :code:`valid_range` class attribute, providing a dict of
+  override the :attr:`valid_range` class attribute, providing a dict of
   :code:`{'parameter': (min, max)}` key-value pairs, where :code:`parameter`
   matches one of the arguments in the :func:`__init__` method, the tuple
   contains the min and max valid values accepted by that parameter.
 - **hint** - To provide a brief help string in the GUI, add a class attribute
-  :code:`hint`.
+  :attr:`hint`.
 - **verbose_help** - To provide more extensive documentation, provide a
-  :code:`verbose_help` class attribute with a string value (can be a multiline
+  :attr:`verbose_help` class attribute with a string value (can be a multiline
   string). If provided, a help button will appear at the top right of the
   widget, which, when clicked, will show a popup with the contents of
-  :code:`verbose_help`
+  :attr:`verbose_help`
 
 As an example, here is an
 :class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>`
@@ -125,8 +125,8 @@ as rendered in the GUI, and the corresponding python class
                 data = data.reshape(nc, -1, ny, nx)
             return data, meta
 
-How :code:`ImgProcessors` are registered in the GUI
----------------------------------------------------
+How :class:`ImgProcessors` are registered in the GUI
+----------------------------------------------------
 
 - The main :class:`ImpListContainer` instance creates an instance of
   :class:`ImpListWidget <mosaicpy.gui.implist.ImpListWidget>`
@@ -142,12 +142,13 @@ How :code:`ImgProcessors` are registered in the GUI
   :func:`__init__` method signature.
 
 ImgProcessors may be added to the list by clicking the "Add Processor" button.
-This opens an :class:`ImgProcessSelector <mosaicpy.gui.implistImgProcessSelector>`
-window which imports all files in the plugins folder whose filename
-ends in :code:`.py`.  It then inspects the module for subclasses of
-:class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>`.  *Only
-subclasses that declare a* :func:`process` *method will be imported.*  The user
-can then select one or more processors to be added to the main window.
+This opens an
+:class:`ImgProcessSelector <mosaicpy.gui.implistImgProcessSelector>` window
+which imports all files in the plugins folder whose filename ends in
+:code:`.py`.  It then inspects the module for subclasses of
+:class:`ImgProcessor <mosaicpy.imgprocessors.imgprocessors.ImgProcessor>`.
+*Only subclasses that declare a* :func:`process` *method will be imported.*
+The user can then select one or more processors to be added to the main window.
 
 
 .. image:: ../img/implist.png
@@ -157,8 +158,8 @@ can then select one or more processors to be added to the main window.
     :members: ImgProcessSelector, ImpListWidget, ImpFrame
 
 
-Built in :code:`ImgProcessors`
-------------------------------
+Built in :class:`ImgProcessors`
+-------------------------------
 
 .. automodule:: mosaicpy.imgprocessors.imgprocessors
     :members: ImgProcessor, ImgWriter
