@@ -29,4 +29,4 @@ REG_DIR = os.path.join(APP_DIR, "regfiles")
 LOG_PATH = os.path.join(APP_DIR, "mosaicpygui.log")
 
 if not os.path.isdir(APP_DIR):
-    os.mkdir(APP_DIR)
+    os.makedirs(APP_DIR, exist_ok=True)
