@@ -15,8 +15,8 @@ import sys
 sys.path.insert(0, os.path.abspath('..'))
 
 autodoc_mock_imports = [
-    "numpy", "tifffolder", "tifffile", "PyQt5", "sentry-sdk", "numba", "matplotlib",
-    "scipy", "dateutil", "appdirs", 'PyQt5.QtGui', 'PyQt5.QtCore', 'PyQt5.QtWidgets'
+    "numpy", "tifffolder", "tifffile", "sentry-sdk", "numba", "matplotlib",
+    "scipy", "dateutil", "appdirs",
 ]
 
 # -- Project information -----------------------------------------------------
