@@ -148,7 +148,7 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
         self.preview_threads = None
         self.previewAborted = False
         self.previewButton.clicked.connect(self.onPreview)
-        if not preview._SPIMAGINE_IMPORTED:
+        if not preview._spimagine:
             self.prevBackendMatplotlibRadio.setChecked(True)
             self.prevBackendSpimagineRadio.setDisabled(True)
             self.prevBackendSpimagineRadio.setText("spimagine [unavailable]")

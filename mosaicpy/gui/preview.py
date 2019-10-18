@@ -9,16 +9,19 @@ import logging
 from .helpers import get_main_window
 
 logger = logging.getLogger(__name__)
-_SPIMAGINE_IMPORTED = False
+_spimagine = None
+_napari = None
 
+try:
+    import napari as _napari
+except ImportError:
+    logger.warnings("napari unavailable.")
 
 if not SETTINGS.value("disableSpimagineCheckBox", False, type=bool):
     try:
         # raise ImportError("skipping")
         with util.HiddenPrints():
-            import spimagine
-
-            _SPIMAGINE_IMPORTED = True
+            import spimagine as _spimagine
     except ImportError:
         logger.error("could not import spimagine!  falling back to matplotlib")
 
@@ -66,14 +69,14 @@ class PreviewWorker(QtCore.QObject):
             self.finished.emit()
 
 
-if _SPIMAGINE_IMPORTED:
+if _spimagine:
 
-    class SpimagineWidget(spimagine.MainWidget):
+    class SpimagineWidget(_spimagine.MainWidget):
         def __init__(self, arr=None, dx=1, dz=1, *args, **kwargs):
             super(SpimagineWidget, self).__init__(*args, **kwargs)
             self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             if arr is not None:
-                self.setModel(spimagine.DataModel(spimagine.NumpyData(arr)))
+                self.setModel(_spimagine.DataModel(_spimagine.NumpyData(arr)))
             self.transform.setStackUnits(dx, dx, dz)
             self.transform.setGamma(0.9)
             datamax = arr.max()
@@ -219,7 +222,9 @@ class HasPreview(object):
 
         # Create worker thread and connect signals
         worker, thread = helpers.newWorkerThread(PreviewWorker, plan)
-        if self.prevBackendSpimagineRadio.isChecked() and _SPIMAGINE_IMPORTED:
+        if self.prevBackendNapariRadio.isChecked() and _napari:
+            worker.finished.connect(self.showNapariWindow)
+        elif self.prevBackendSpimagineRadio.isChecked() and _spimagine:
             worker.finished.connect(self.showSpimagineWindow)
         else:
             worker.finished.connect(self.on_item_finished)
@@ -261,7 +266,10 @@ class HasPreview(object):
         if self.previewAborted:
             return
         self.append_preview_data(array)
-        if self.prevBackendSpimagineRadio.isChecked() and _SPIMAGINE_IMPORTED:
+        if (
+            self.prevBackendSpimagineRadio.isChecked()
+            or self.prevBackendNapariRadio.isChecked()
+        ):
             self._meta = meta
         else:
             # if there is already an open window and this is not the first timepoint
@@ -289,6 +297,38 @@ class HasPreview(object):
             self.previewButton.setText("ABORTING...")
             self.previewButton.setDisabled(True)
 
+    def showNapariWindow(self):
+        if self.preview_data is not None:
+            cmaps = ("green", "magenta", "gray")
+            viewer = _napari.Viewer()
+            metaparams = getattr(self, "_meta", {}).get("params", {})
+            if metaparams.get("nc", 1) > 1:
+                viewer.add_multichannel(
+                    self.preview_data,
+                    axis=-4,
+                    colormap=cmaps,
+                    name=[str(n) for n in metaparams.get('wavelengths')],
+                    scale=(
+                        metaparams.get("dzFinal", 1),
+                        metaparams.get("dx", 1),
+                        metaparams.get("dx", 1),
+                    ),
+                )
+            else:
+                viewer.add_image(
+                    self.preview_data,
+                    scale=(
+                        metaparams.get("dzFinal", 1),
+                        metaparams.get("dx", 1),
+                        metaparams.get("dx", 1),
+                    ),
+                    blending="additive",
+                    colormap='gray'
+                )
+            viewer.dims.ndisplay = 3
+            self.spimwins.append(viewer)
+        self.on_item_finished()
+
     def showSpimagineWindow(self):
         if self.preview_data is not None:
             metaparams = getattr(self, "_meta", {}).get("params", {})
@@ -301,7 +341,7 @@ class HasPreview(object):
 
             for arr in arrays:
                 win = SpimagineWidget(
-                    arr, dx=metaparams.get("dx", 1), dz=metaparams.get("dz", 1)
+                    arr, dx=metaparams.get("dx", 1), dz=metaparams.get("dzFinal", 1)
                 )
                 win.setWindowTitle(helpers.shortname(self.previewPath))
                 self.spimwins.append(win)

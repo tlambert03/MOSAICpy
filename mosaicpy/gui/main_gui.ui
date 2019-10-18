@@ -754,6 +754,16 @@ bead) images acquired in each channel.</string>
            <property name="bottomMargin">
             <number>8</number>
            </property>
+            <item>
+            <widget class="QRadioButton" name="prevBackendNapariRadio">
+             <property name="text">
+              <string>napari</string>
+             </property>
+             <property name="checked">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
            <item>
             <widget class="QRadioButton" name="prevBackendSpimagineRadio">
              <property name="text">
