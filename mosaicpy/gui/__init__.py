@@ -1,4 +1,4 @@
-from PyQt5 import QtCore
+from qtpy import QtCore
 import logging
 import os
 from appdirs import user_data_dir

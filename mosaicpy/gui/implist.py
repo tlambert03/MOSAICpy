@@ -10,15 +10,18 @@ from . import IMP_DIR, PLAN_DIR, SETTINGS
 
 from mosaicpy import ImgProcessor, ImgWriter, imgprocessors
 from mosaicpy.gui.helpers import camel_case_split, val_to_widget, get_main_window
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from mosaicpy.gui.frame import Ui_impFrame
+from qtpy import QtCore, QtGui, QtWidgets, uic
 
 logger = logging.getLogger(__name__)
-framepath = os.path.join(os.path.dirname(__file__), "frame.ui")
-try:
-    Ui_ImpFrame = uic.loadUiType(framepath)[0]
-except TypeError:
-    # this is just here to prevent an exception when building the docs and mocking uic
-    Ui_ImpFrame = object
+# framepath = os.path.join(os.path.dirname(__file__), "frame.ui")
+# try:
+#     Ui_ImpFrame = uic.loadUi(framepath)
+#     print(Ui_ImpFrame)
+#     print(type(Ui_ImpFrame))
+# except TypeError:
+#     # this is just here to prevent an exception when building the docs and mocking uic
+#     Ui_ImpFrame = object
 
 # if os.path.exists(IMP_DIR):
 #     if IMP_DIR not in sys.path:
@@ -150,13 +153,13 @@ class HelpWindow(QtWidgets.QWidget):
         self.setGeometry(qtRectangle.left(), qtRectangle.top(), 650, 300)
 
 
-class ImpFrame(QtWidgets.QFrame, Ui_ImpFrame):
+class ImpFrame(QtWidgets.QFrame, Ui_impFrame):
     """ Class for each image processor in the ImpList
 
     builds a gui from the ImgProcessor class __init__ default params
     """
 
-    stateChanged = QtCore.pyqtSignal()
+    stateChanged = QtCore.Signal()
 
     def __init__(
         self,
@@ -182,7 +185,7 @@ class ImpFrame(QtWidgets.QFrame, Ui_ImpFrame):
         self.content.setVisible(not self.is_collapsed)
         self.title.setText(imp.name())
         self.mouseDoubleClickEvent = self.toggleCollapsed
-        self.activeBox.toggled.connect(self.stateChanged.emit)
+        self.activeBox.toggled.connect(lambda: self.stateChanged.emit())
         # arrow to collapse frame
         self.arrow = self.Arrow(self.arrowFrame, collapsed=collapsed)
         self.arrow.clicked.connect(self.toggleCollapsed)
@@ -295,7 +298,7 @@ class ImpFrame(QtWidgets.QFrame, Ui_ImpFrame):
     class Arrow(QtWidgets.QFrame):
         """ small arrow to collapse/expand the frame details """
 
-        clicked = QtCore.pyqtSignal()
+        clicked = QtCore.Signal()
 
         def __init__(self, parent=None, collapsed=False):
             super(ImpFrame.Arrow, self).__init__(parent=parent)
@@ -322,7 +325,7 @@ class ImpFrame(QtWidgets.QFrame, Ui_ImpFrame):
             painter.begin(self)
             painter.setBrush(QtGui.QColor(0, 0, 0))
             painter.setPen(QtGui.QColor(0, 0, 0))
-            painter.drawPolygon(*self._arrow)
+            painter.drawPolygon(self._arrow)
             painter.end()
 
         def mousePressEvent(self, event):
@@ -337,7 +340,7 @@ class ImpListWidget(QtWidgets.QListWidget):
     processing is done to the data
     """
 
-    planChanged = QtCore.pyqtSignal()
+    planChanged = QtCore.Signal()
     LAST_PLAN = os.path.join(PLAN_DIR, "_lastused.json")
     DEFAULT = os.path.join(os.path.dirname(__file__), "default.json")
 
@@ -501,8 +504,8 @@ class ImgProcessSelector(QtWidgets.QDialog):
     will search mosaicpy.imgprocessors by default, will add plugins later
     """
 
-    selected = QtCore.pyqtSignal(object)
-    import_error = QtCore.pyqtSignal(str, str, str, str)
+    selected = QtCore.Signal(object)
+    import_error = QtCore.Signal(str, str, str, str)
 
     def __init__(self, *args, **kwargs):
         super(ImgProcessSelector, self).__init__(*args, **kwargs)

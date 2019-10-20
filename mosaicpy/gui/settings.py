@@ -2,7 +2,7 @@ import logging
 import inspect
 import sys
 from .helpers import getter_setter_onchange
-from PyQt5 import QtCore
+from qtpy import QtCore
 from collections import namedtuple
 
 logger = logging.getLogger(__name__)

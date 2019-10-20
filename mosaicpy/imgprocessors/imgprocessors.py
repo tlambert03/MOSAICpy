@@ -599,7 +599,7 @@ class RotateYProcessor(AffineProcessor):
         return cls(*args, **kwargs)
 
 
-# @QtCore.pyqtSlot(str)
+# @QtCore.Slot(str)
 # def loadRegObject(self, path):
 #     if path in (None, ''):
 #         return

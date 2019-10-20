@@ -2,7 +2,7 @@ from . import LOG_PATH
 from logging.handlers import RotatingFileHandler
 import logging
 import traceback
-from PyQt5.QtCore import QObject, pyqtSignal
+from qtpy.QtCore import QObject, Signal
 
 
 class NoExceptionTracebackFormatter(logging.Formatter):
@@ -26,7 +26,7 @@ class NoExceptionTracebackFormatter(logging.Formatter):
 
 class NotificationHandler(QObject, logging.Handler):
 
-    emitSignal = pyqtSignal(str)
+    emitSignal = Signal(str)
 
     def __init__(self):
         super(NotificationHandler, self).__init__()

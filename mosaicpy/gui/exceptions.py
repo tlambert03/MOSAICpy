@@ -1,4 +1,4 @@
-from PyQt5 import QtCore
+from qtpy import QtCore, QT_VERSION
 
 # from raven import Client, fetch_git_sha, fetch_package_version, breadcrumbs
 
@@ -115,7 +115,7 @@ else:
 #     tags['gpu'] = 'no_cudabin'
 #     logger.error("CUDAbinException: Could not get gpulist")
 
-tags["pyqt"] = QtCore.QT_VERSION_STR
+tags["pyqt"] = QT_VERSION
 for p in ("numpy", "pyopencl", "pyopengl", "spimagine", "gputools", "mosaicpy"):
     try:
         tags[p] = fetch_package_version(p)
@@ -184,7 +184,7 @@ class ExceptionHandler(QtCore.QObject):
     """General class to handle all raise exception errors in the GUI"""
 
     # error message, title, more info, detail (e.g. traceback)
-    errorMessage = QtCore.pyqtSignal(str, str, str, str)
+    errorMessage = QtCore.Signal(str, str, str, str)
 
     def __init__(self):
         super(ExceptionHandler, self).__init__()

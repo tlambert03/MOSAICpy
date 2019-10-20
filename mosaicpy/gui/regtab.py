@@ -3,7 +3,7 @@ import logging
 import json
 import os
 import mosaicpy.gui.exceptions as err
-from PyQt5 import QtCore, QtWidgets
+from qtpy import QtCore, QtWidgets
 from mosaicpy import llsdir
 from mosaicpy.gui.helpers import newWorkerThread
 from mosaicpy.gui import workers, actions
@@ -86,8 +86,8 @@ class RegistrationTab(actions.MOSAICpyActions):
             return
 
         class RegThread(QtCore.QThread):
-            finished = QtCore.pyqtSignal(str)
-            warning = QtCore.pyqtSignal(str, str)
+            finished = QtCore.Signal(str)
+            warning = QtCore.Signal(str, str)
 
             def __init__(self, RD, outdir, refs):
                 QtCore.QThread.__init__(self)
@@ -204,7 +204,7 @@ class RegistrationTab(actions.MOSAICpyActions):
             )
             return
 
-        @QtCore.pyqtSlot(np.ndarray, float, float, dict)
+        @QtCore.Slot(np.ndarray, float, float, dict)
         def displayRegPreview(array, dx=None, dz=None, params=None):
             win = ImgDialog(
                 array,

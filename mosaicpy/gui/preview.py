@@ -1,4 +1,4 @@
-from PyQt5 import QtWidgets, QtCore
+from qtpy import QtWidgets, QtCore
 from mosaicpy.gui import img_dialog, helpers, SETTINGS
 from mosaicpy import util, processplan
 import os
@@ -17,7 +17,7 @@ try:
 except ImportError:
     logger.warnings("napari unavailable.")
 
-if not SETTINGS.value("disableSpimagineCheckBox", False, type=bool):
+if not SETTINGS.value("disableSpimagineCheckBox", False):
     try:
         # raise ImportError("skipping")
         with util.HiddenPrints():
@@ -27,7 +27,7 @@ if not SETTINGS.value("disableSpimagineCheckBox", False, type=bool):
 
 
 class PreviewPlan(processplan.PreviewPlan, QtCore.QObject):
-    imp_starting = QtCore.pyqtSignal(object, dict)
+    imp_starting = QtCore.Signal(object, dict)
 
     def __init__(self, *args, **kwargs):
         QtCore.QObject.__init__(self)
@@ -49,10 +49,10 @@ class PreviewPlan(processplan.PreviewPlan, QtCore.QObject):
 
 
 class PreviewWorker(QtCore.QObject):
-    work_starting = QtCore.pyqtSignal(int)  # set progressbar maximum
-    item_errored = QtCore.pyqtSignal(object)
-    preview_update = QtCore.pyqtSignal(np.ndarray, dict)
-    finished = QtCore.pyqtSignal()
+    work_starting = QtCore.Signal(int)  # set progressbar maximum
+    item_errored = QtCore.Signal(object)
+    preview_update = QtCore.Signal(np.ndarray, dict)
+    finished = QtCore.Signal()
 
     def __init__(self, plan, **kwargs):
         super(PreviewWorker, self).__init__()
@@ -113,7 +113,7 @@ if _spimagine:
 
 
 class HasPreview(object):
-    abort_request = QtCore.pyqtSignal()
+    abort_request = QtCore.Signal()
 
     def getSelectedPath(self):
         # if there is nothing in the list, just abort
@@ -239,7 +239,7 @@ class HasPreview(object):
         thread.start()
         self.previewButton.setEnabled(True)
 
-    @QtCore.pyqtSlot(object, dict)
+    @QtCore.Slot(object, dict)
     def emit_update(self, imp, meta):
         updatestring = "Rendering preview, t {} of {}: {}...".format(
             meta.get("t"), meta.get("nt"), imp.verb()
@@ -260,7 +260,7 @@ class HasPreview(object):
                 (self.preview_data, np.expand_dims(newdata, 0)), axis=0
             )
 
-    @QtCore.pyqtSlot(np.ndarray, dict)
+    @QtCore.Slot(np.ndarray, dict)
     def update_preview(self, array, meta):
         newwindow = self.preview_data is None
         if self.previewAborted:
@@ -302,29 +302,24 @@ class HasPreview(object):
             cmaps = ("green", "magenta", "gray")
             viewer = _napari.Viewer()
             metaparams = getattr(self, "_meta", {}).get("params", {})
+            _scale = (metaparams.get("dzFinal", 1) / metaparams.get("dx", 1), 1, 1)
+            print(self.preview_data.shape)
             if metaparams.get("nc", 1) > 1:
                 viewer.add_multichannel(
                     self.preview_data,
                     axis=-4,
                     colormap=cmaps,
-                    name=[str(n) for n in metaparams.get('wavelengths')],
-                    scale=(
-                        metaparams.get("dzFinal", 1),
-                        metaparams.get("dx", 1),
-                        metaparams.get("dx", 1),
-                    ),
+                    name=[str(n) for n in metaparams.get("wavelengths")],
+                    scale=_scale,
                 )
             else:
                 viewer.add_image(
                     self.preview_data,
-                    scale=(
-                        metaparams.get("dzFinal", 1),
-                        metaparams.get("dx", 1),
-                        metaparams.get("dx", 1),
-                    ),
+                    scale=_scale,
                     blending="additive",
-                    colormap='gray'
+                    colormap="gray",
                 )
+            viewer.dims.set_point(0, viewer.dims.range[0][1] // 2)
             viewer.dims.ndisplay = 3
             self.spimwins.append(viewer)
         self.on_item_finished()

@@ -1,13 +1,15 @@
 import os
 import mosaicpy
-from PyQt5 import QtCore, uic
-from PyQt5 import QtWidgets as QtW
+from qtpy import QtCore, uic
+from qtpy import QtWidgets as QtW
 from mosaicpy import util
 from mosaicpy.gui import workers, dialogs
 from mosaicpy.gui.helpers import reveal, shortname, newWorkerThread
 from mosaicpy.gui.implist import IMP_DIR
 
-Ui_Main_GUI = uic.loadUiType(os.path.join(os.path.dirname(__file__), "main_gui.ui"))[0]
+from mosaicpy.gui.main_gui import Ui_Main_GUI
+# ui_path = os.path.join(os.path.dirname(__file__), "main_gui.ui")
+# Ui_Main_GUI = uic.loadUiType(os.path.join(os.path.dirname(__file__), "main_gui.ui"))[0]
 # form_class = uic.loadUiType('./mosaicpy/gui/main_gui.ui')[0]  # for debugging
 
 
@@ -75,7 +77,7 @@ class MOSAICpyActions(QtW.QMainWindow, Ui_Main_GUI):
         if path is not None:
             self.listbox.addPath(path)
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def close_all_previews(self):
         if hasattr(self, "spimwins"):
             for win in self.spimwins:

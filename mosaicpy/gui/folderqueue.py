@@ -1,19 +1,19 @@
 import logging
 import mosaicpy.gui.exceptions as err
 import os
-from PyQt5 import QtCore, QtGui
-from PyQt5 import QtWidgets as QtW
+from qtpy import QtCore, QtGui
+from qtpy import QtWidgets as QtW
 from mosaicpy import util, llsdir, processplan
 from mosaicpy.gui import settings, SETTINGS, dialogs
-from mosaicpy.gui.helpers import shortname, newWorkerThread
+from mosaicpy.gui.helpers import shortname, newWorkerThread, get_main_window
 
 logger = logging.getLogger(__name__)
 
 
 class ProcessPlan(processplan.ProcessPlan, QtCore.QObject):
-    imp_starting = QtCore.pyqtSignal(object, dict)
-    imp_finished = QtCore.pyqtSignal(dict)
-    t_finished = QtCore.pyqtSignal(int)
+    imp_starting = QtCore.Signal(object, dict)
+    imp_finished = QtCore.Signal(dict)
+    t_finished = QtCore.Signal(int)
 
     def __init__(self, *args, **kwargs):
         QtCore.QObject.__init__(self)
@@ -36,9 +36,9 @@ class ProcessPlan(processplan.ProcessPlan, QtCore.QObject):
 
 
 class QueueItemWorker(QtCore.QObject):
-    work_starting = QtCore.pyqtSignal(int)  # set progressbar maximum
-    item_errored = QtCore.pyqtSignal(object)
-    finished = QtCore.pyqtSignal()
+    work_starting = QtCore.Signal(int)  # set progressbar maximum
+    item_errored = QtCore.Signal(object)
+    finished = QtCore.Signal()
 
     def __init__(self, plan, **kwargs):
         super(QueueItemWorker, self).__init__()
@@ -59,14 +59,14 @@ class LLSDragDropTable(QtW.QTableWidget):
     col_headers = ["path", "name", "nC", "nT", "nZ", "nY", "nX", "angle", "dz", "dx"]
     n_cols = len(col_headers)
 
-    status_update = QtCore.pyqtSignal(str)
-    item_starting = QtCore.pyqtSignal(int)
-    step_finished = QtCore.pyqtSignal(int)
-    work_finished = QtCore.pyqtSignal(
+    status_update = QtCore.Signal(str)
+    item_starting = QtCore.Signal(int)
+    step_finished = QtCore.Signal(int)
+    work_finished = QtCore.Signal(
         int, int, int
     )  # return_code, numgood, numskipped,
-    abort_request = QtCore.pyqtSignal()
-    eta_update = QtCore.pyqtSignal(int)  # for clock
+    abort_request = QtCore.Signal()
+    eta_update = QtCore.Signal(int)  # for clock
 
     def __init__(self, parent=None):
         super(LLSDragDropTable, self).__init__(0, self.n_cols, parent)
@@ -79,7 +79,7 @@ class LLSDragDropTable(QtW.QTableWidget):
         self.setSelectionMode(QtW.QAbstractItemView.ExtendedSelection)
         self.setSelectionBehavior(QtW.QAbstractItemView.SelectRows)
         self.setEditTriggers(QtW.QAbstractItemView.DoubleClicked)
-        self.setGridStyle(3)  # dotted grid line
+        self.setGridStyle(QtCore.Qt.DotLine)  # dotted grid line
         self.setHorizontalHeaderLabels(self.col_headers)
         self.hideColumn(0)  # column 0 is a hidden col for the full pathname
         header = self.horizontalHeader()
@@ -88,7 +88,7 @@ class LLSDragDropTable(QtW.QTableWidget):
             header.resizeSection(*t)
         self.cellChanged.connect(self.onCellChanged)
 
-    @QtCore.pyqtSlot(int, int)
+    @QtCore.Slot(int, int)
     def onCellChanged(self, row, col):
         # if it's not one of the last few columns that changed, ignore
         if col < 7:
@@ -137,26 +137,25 @@ class LLSDragDropTable(QtW.QTableWidget):
                     self.currentItem().setBackground(QtCore.Qt.white)
                 self.cellChanged.connect(self.onCellChanged)
 
-    @QtCore.pyqtSlot(str)
+    @QtCore.Slot(str)
     def addPath(self, path):
         try:
-            self.cellChanged.disconnect(self.onCellChanged)
-        except TypeError:
+            pass
+            # self.cellChanged.disconnect(self.onCellChanged)
+        except (TypeError, RuntimeError):
             pass
         if not (os.path.exists(path) and os.path.isdir(path)):
             return
 
-        # FIXMEL bad reference method
-        mainGUI = self.parent().parent().parent().parent().parent().parent()
+        # if it's already on the list, don't add it
+        if len(self.findItems(path, QtCore.Qt.MatchExactly)):
+            return
+
         # If this folder is not on the list yet, add it to the list:
         if not util.pathHasPattern(path, "*Settings.txt"):
             if not SETTINGS.value(settings.ALLOW_NO_SETTXT.key):
                 logger.warning("No Settings.txt! Ignoring: {}".format(path))
                 return
-
-        # if it's already on the list, don't add it
-        if len(self.findItems(path, QtCore.Qt.MatchExactly)):
-            return
 
         # if it's a folder containing files with "_Iter_"  warn the user...
         if util.pathHasPattern(path, "*Iter_*"):
@@ -181,6 +180,7 @@ class LLSDragDropTable(QtW.QTableWidget):
         E = llsdir.LLSdir(path)
         logger.info("Adding to queue: %s" % shortname(path))
 
+        mainGUI = get_main_window()
         rowPosition = self.rowCount()
         self.insertRow(rowPosition)
         item = [
@@ -231,7 +231,7 @@ class LLSDragDropTable(QtW.QTableWidget):
     def selectedObjects(self):
         return [self.getLLSObjectByPath(p) for p in self.selectedPaths()]
 
-    @QtCore.pyqtSlot(str)
+    @QtCore.Slot(str)
     def removePath(self, path):
         try:
             self.lls_objects.pop(path)
@@ -310,7 +310,7 @@ class LLSDragDropTable(QtW.QTableWidget):
                 self.removePath(path)
                 i += 1
 
-    @QtCore.pyqtSlot(list)
+    @QtCore.Slot(list)
     def startProcessing(self, implist):
         self.currentImps = implist
         self.skipped_items = set()
@@ -413,7 +413,7 @@ class LLSDragDropTable(QtW.QTableWidget):
         self.setRowBackgroundColor(numskipped, QtGui.QColor(0, 0, 255, 30))
         self.clearSelection()
 
-    @QtCore.pyqtSlot(int)
+    @QtCore.Slot(int)
     def on_step_finished(self, t):
         self.step_finished.emit(t)
         # update status bar
@@ -425,14 +425,14 @@ class LLSDragDropTable(QtW.QTableWidget):
         # timeAsString = QtCore.QTime(0, 0).addMSecs(remainingTime).toString()
         self.eta_update.emit(remainingTime)
 
-    @QtCore.pyqtSlot(object, dict)
+    @QtCore.Slot(object, dict)
     def emit_update(self, imp, meta):
         updatestring = "Timepoint {} of {}: {}...".format(
             meta.get("t"), meta.get("nt"), imp.verb()
         )
         self.status_update.emit(updatestring)
 
-    @QtCore.pyqtSlot(object)
+    @QtCore.Slot(object)
     def on_item_error(self, e):
         raise(e)
         print("ITEM ERROR")
@@ -442,7 +442,7 @@ class LLSDragDropTable(QtW.QTableWidget):
         self.skipped_items.add(self.currentPath)
         self.look_for_next_item()
 
-    @QtCore.pyqtSlot()
+    @QtCore.Slot()
     def on_item_finished(self):
         self.cleanup_last_worker()
         self.numProcessed += 1

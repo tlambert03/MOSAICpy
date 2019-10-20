@@ -14,9 +14,10 @@ except ImportError:
     sys.path.append(os.path.join(this_dir, os.pardir, os.pardir))
     import mosaicpy
 
+from qtpy import QtWidgets, QtGui
+
 from mosaicpy.gui import dialogs, settings, SETTINGS, mainwindow, qtlogger, exceptions
 from mosaicpy import util, __version__
-from PyQt5 import QtWidgets, QtGui
 from distutils.version import StrictVersion
 
 
@@ -58,7 +59,6 @@ def main():
     logger.addHandler(fh)
     fh.setLevel(logging.DEBUG)
     logger.info(">" * 10 + "  MOSAICpy STARTUP  " + "<" * 10)
-
     # instantiate the main window widget
     mainGUI = mainwindow.main_GUI()
     mainGUI.setWindowIcon(appicon)

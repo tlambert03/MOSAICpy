@@ -5,7 +5,7 @@ import sys
 import time
 from enum import Enum
 
-from PyQt5 import QtCore, QtWidgets
+from qtpy import QtCore, QtWidgets
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ class NoScrollDoubleSpin(QtWidgets.QDoubleSpinBox, IgnoreMouseWheel):
 
 
 class FileDialogLineEdit(QtWidgets.QFrame):
-    textChanged = QtCore.pyqtSignal()
+    textChanged = QtCore.Signal()
 
     def __init__(self, val="", *args, **kwargs):
         super(FileDialogLineEdit, self).__init__(*args, **kwargs)
@@ -70,7 +70,7 @@ class FileDialogLineEdit(QtWidgets.QFrame):
         self.setLayout(self._layout)
         self._layout.setContentsMargins(0, 0, 0, 0)
         self._lineEdit = QtWidgets.QLineEdit(str(val))
-        self._lineEdit.textChanged.connect(self.textChanged.emit)
+        self._lineEdit.textChanged.connect(lambda: self.textChanged.emit())
         self._browseButton = QtWidgets.QPushButton("Browse")
         self._browseButton.clicked.connect(self.setPath)
         self._layout.addWidget(self._lineEdit)
@@ -105,7 +105,7 @@ class DirDialogLineEdit(FileDialogLineEdit):
 
 
 class TupleWidgetFrame(QtWidgets.QFrame):
-    valueChanged = QtCore.pyqtSignal()
+    valueChanged = QtCore.Signal()
 
     def __init__(self, tup, *args, **kwargs):
         super(TupleWidgetFrame, self).__init__(*args, **kwargs)
@@ -119,8 +119,8 @@ class TupleWidgetFrame(QtWidgets.QFrame):
             stuff = val_to_widget(val)
             if not stuff:
                 continue
-            widg, signal, getter, setter = stuff
-            signal.connect(self.set_param(i, getter, type(val)))
+            widg, changed, getter, setter = stuff
+            changed.connect(self.set_param(i, getter, type(val)))
             self._layout.addWidget(widg)
             self._setters.append(setter)
 
@@ -162,12 +162,14 @@ def val_to_widget(val, key=None):
         changed = widg.stateChanged
         getter = widg.isChecked
     elif dtype == int:
-        widg = NoScrollSpin(val)
+        widg = NoScrollSpin()
+        widg.setValue(val)
         setter = widg.setValue
         changed = widg.valueChanged
         getter = widg.value
     elif dtype == float:
-        widg = NoScrollDoubleSpin(val)
+        widg = NoScrollDoubleSpin()
+        widg.setValue(val)
         setter = widg.setValue
         changed = widg.valueChanged
         getter = widg.value

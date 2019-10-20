@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+
 from mosaicpy.gui import (
     camcalibgui,
     implist,
@@ -14,7 +15,7 @@ from mosaicpy.gui import (
     SETTINGS,
     settings,
 )
-from PyQt5 import QtCore, QtGui, QtWidgets
+from qtpy import QtCore, QtGui, QtWidgets
 
 # from fiducialreg.fiducialreg import RegFile, RegistrationError
 
@@ -196,7 +197,7 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
         # start a timer in the main GUI to measure item processing time
         self.timer.start(1000)
 
-    @QtCore.pyqtSlot(int)
+    @QtCore.Slot(int)
     def set_eta(self, value):
         self._eta = value
 
@@ -206,7 +207,7 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
             _d = QtCore.QTime(0, 0).addMSecs(self._eta).toString()
             self.clock.display(_d)
 
-    @QtCore.pyqtSlot(int, int, int)  # return code, numdone, numsk
+    @QtCore.Slot(int, int, int)  # return code, numdone, numsk
     def onProcessFinished(self, retcode, numfinished, numskipped):
         """ called when listbox queue is completely finished or aborted """
         self.enableProcessButton()
@@ -254,7 +255,7 @@ class main_GUI(regtab.RegistrationTab, preview.HasPreview):
     def toggleOptOut(self, value):
         exceptions._OPTOUT = True if value else False
 
-    @QtCore.pyqtSlot(str, str, str, str)
+    @QtCore.Slot(str, str, str, str)
     def show_error_window(self, errMsg, title=None, info=None, detail=None):
         self.msgBox = ResizeableMsgBox()
 

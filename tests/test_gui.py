@@ -1,6 +1,6 @@
 import os
 from mosaicpy.gui.mainwindow import main_GUI
-from PyQt5 import QtWidgets, QtCore
+from qtpy import QtWidgets, QtCore
 from pytestqt import qtbot
 from mosaicpy.llsdir import LLSdir
 

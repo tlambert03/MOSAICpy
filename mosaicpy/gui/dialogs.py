@@ -1,11 +1,11 @@
-from PyQt5 import QtWidgets, QtCore
+from qtpy import QtWidgets, QtCore
 from functools import partial
 from mosaicpy.gui import SETTINGS, helpers, settings
 from mosaicpy import __version__
 
 
 class ClickableLabel(QtWidgets.QLabel):
-    clicked = QtCore.pyqtSignal()
+    clicked = QtCore.Signal()
 
     def mousePressEvent(self, event):
         self.clicked.emit()
@@ -20,7 +20,7 @@ class PreferencesWindow(QtWidgets.QDialog):
         title.setStyleSheet("font-weight: bold; font-size: 20px;")
         self.layout().addWidget(title, 0, 0, 1, 2)
         for i, settup in enumerate(settings.SETTUPS.values()):
-            val = SETTINGS.value(settup.key)
+            val = bool(SETTINGS.value(settup.key))
             stuff = helpers.val_to_widget(val, settup.key)
             if not stuff:
                 continue
@@ -70,7 +70,7 @@ class DontConfirmMsgBox(QtWidgets.QMessageBox):
         self.msg = QtWidgets.QLabel("(This can be changed in the Preferences window)")
         self.msg.setStyleSheet("font-style: italic;")
 
-    @QtCore.pyqtSlot(int)
+    @QtCore.Slot(int)
     def remember_pref(self, value):
         if value:
             SETTINGS.setValue(self.prefname, False)
