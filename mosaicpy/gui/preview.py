@@ -15,7 +15,7 @@ _napari = None
 try:
     import napari as _napari
 except ImportError:
-    logger.warnings("napari unavailable.")
+    logger.warning("napari unavailable.")
 
 if not SETTINGS.value("disableSpimagineCheckBox", False):
     try:
